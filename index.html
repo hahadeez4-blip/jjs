@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JJS Mesh Converter</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: #101010;
+        color: white;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        width: min(750px, 92%);
+        margin: 40px auto;
+        padding: 25px;
+        background: #1b1b1b;
+        border-radius: 16px;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    label {
+        display: block;
+        margin-top: 15px;
+        margin-bottom: 6px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        border: 0;
+        border-radius: 8px;
+        background: #292929;
+        color: white;
+        font-size: 16px;
+        outline: none;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 13px;
+        border: 0;
+        border-radius: 8px;
+        background: #5865f2;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #4752c4;
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 180px;
+        margin-top: 15px;
+        padding: 12px;
+        resize: vertical;
+        border: 0;
+        border-radius: 8px;
+        background: #080808;
+        color: #00ff88;
+        font-family: monospace;
+    }
+
+    #status {
+        margin-top: 15px;
+        text-align: center;
+        color: #aaa;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>JJS Mesh Converter</h1>
+
+    <label>Mesh Texture ID</label>
+    <input
+        id="textureId"
+        type="number"
+        placeholder="Example: 2"
+    >
+
+    <label>Asset ID</label>
+    <input
+        id="assetId"
+        type="number"
+        placeholder="Example: 2"
+    >
+
+    <button id="generateButton">
+        Generate JJS Code
+    </button>
+
+    <textarea
+        id="jsonOutput"
+        readonly
+        placeholder="Generated JSON..."
+    ></textarea>
+
+    <textarea
+        id="base64Output"
+        readonly
+        placeholder="Zstandard → Base64 output..."
+    ></textarea>
+
+    <button id="copyButton">
+        Copy Base64
+    </button>
+
+    <div id="status">Ready</div>
+
+</div>
+
+
+<script type="module">
+
+import {
+    compress
+} from "https://esm.sh/@cloudpss/zstd@0.3.23";
+
+
+const textureInput =
+    document.getElementById("textureId");
+
+const assetInput =
+    document.getElementById("assetId");
+
+const jsonOutput =
+    document.getElementById("jsonOutput");
+
+const base64Output =
+    document.getElementById("base64Output");
+
+const status =
+    document.getElementById("status");
+
+const generateButton =
+    document.getElementById("generateButton");
+
+const copyButton =
+    document.getElementById("copyButton");
+
+
+/*
+    Convert Uint8Array → Base64
+*/
+function bytesToBase64(bytes) {
+
+    let binary = "";
+
+    const chunkSize = 0x8000;
+
+    for (
+        let i = 0;
+        i < bytes.length;
+        i += chunkSize
+    ) {
+
+        const chunk = bytes.subarray(
+            i,
+            Math.min(i + chunkSize, bytes.length)
+        );
+
+        binary += String.fromCharCode(...chunk);
+    }
+
+    return btoa(binary);
+}
+
+
+/*
+    Generate everything automatically:
+
+    IDs
+      ↓
+    JJS JSON
+      ↓
+    UTF-8
+      ↓
+    Zstandard
+      ↓
+    Base64
+*/
+generateButton.addEventListener("click", async () => {
+
+    const texture =
+        textureInput.value.trim();
+
+    const asset =
+        assetInput.value.trim();
+
+
+    if (!texture || !asset) {
+
+        alert("Enter both the Texture ID and Asset ID.");
+
+        return;
+    }
+
+
+    status.textContent =
+        "Generating JJS JSON...";
+
+
+    /*
+        Inner DATA object
+    */
+    const innerData = {
+
+        Line: [
+
+            {
+                TEXTURE: Number(texture),
+
+                AMOUNT: Number(asset),
+
+                K_NAME: "VISUAL",
+
+                EFFECT: "Mesh"
+            }
+
+        ],
+
+        Prop: [],
+
+        Req: []
+    };
+
+
+    /*
+        Complete JJS structure
+    */
+    const jjsData = [
+
+        {
+            ADD: false,
+
+            NAME: "IMPORT",
+
+            K_NAME: "SKILL",
+
+            KEY: 1,
+
+            "TOOL TIP": "",
+
+            DATA: JSON.stringify(innerData),
+
+            COOLDOWN: 0
+        }
+
+    ];
+
+
+    /*
+        Compact JSON.
+
+        This exact string is what gets
+        compressed.
+    */
+    const json =
+        JSON.stringify(jjsData);
+
+
+    /*
+        Show JSON
+    */
+    jsonOutput.value =
+        JSON.stringify(jjsData, null, 2);
+
+
+    try {
+
+        status.textContent =
+            "Compressing with Zstandard...";
+
+
+        /*
+            JSON → UTF-8
+        */
+        const encoder =
+            new TextEncoder();
+
+        const bytes =
+            encoder.encode(json);
+
+
+        /*
+            UTF-8 → Zstandard
+        */
+        const compressed =
+            await compress(bytes, 3);
+
+
+        /*
+            Zstandard → Base64
+        */
+        const base64 =
+            bytesToBase64(compressed);
+
+
+        /*
+            Show final JJS code
+        */
+        base64Output.value =
+            base64;
+
+
+        status.textContent =
+            "Done! JSON → Zstandard → Base64";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "Zstandard conversion failed.";
+
+        alert(
+            "Zstandard error:\n\n" +
+            error.message
+        );
+    }
+
+});
+
+
+/*
+    Copy final Base64 code
+*/
+copyButton.addEventListener("click", async () => {
+
+    if (!base64Output.value) {
+
+        alert("Generate a code first.");
+
+        return;
+    }
+
+
+    await navigator.clipboard.writeText(
+        base64Output.value
+    );
+
+
+    status.textContent =
+        "Base64 copied!";
+});
+
+</script>
+
+</body>
+</html>
