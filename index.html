@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JJS Multi Mesh Converter</title>
+<title>JJS Mesh Converter</title>
 
 <style>
 * {
@@ -18,16 +18,19 @@ body {
 }
 
 .container {
-    width: min(750px, 94%);
+    width: min(800px, 94%);
     margin: 40px auto;
-    padding: 25px;
+}
+
+.section {
     background: #1b1b1b;
+    padding: 25px;
+    margin-bottom: 25px;
     border-radius: 16px;
 }
 
-h1 {
+h1, h2 {
     text-align: center;
-    margin-bottom: 25px;
 }
 
 .mesh {
@@ -36,6 +39,14 @@ h1 {
     gap: 10px;
     margin-top: 12px;
     align-items: center;
+}
+
+.headers {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    color: #aaa;
+    font-size: 13px;
 }
 
 input {
@@ -47,6 +58,20 @@ input {
     color: white;
     font-size: 15px;
     outline: none;
+}
+
+textarea {
+    width: 100%;
+    min-height: 180px;
+    margin-top: 15px;
+    padding: 12px;
+    resize: vertical;
+    border: 0;
+    border-radius: 8px;
+    background: #080808;
+    color: #00ff88;
+    font-family: monospace;
+    font-size: 13px;
 }
 
 button {
@@ -76,32 +101,11 @@ button:hover {
     background: #a22;
 }
 
-#output {
-    width: 100%;
-    height: 220px;
-    margin-top: 20px;
-    padding: 12px;
-    resize: vertical;
-    border: 0;
-    border-radius: 8px;
-    background: #080808;
-    color: #00ff88;
-    font-family: monospace;
-    font-size: 13px;
-}
-
-#status {
+#status,
+#decodeStatus {
     margin-top: 15px;
     text-align: center;
     color: #aaa;
-}
-
-.headers {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 10px;
-    color: #aaa;
-    font-size: 13px;
 }
 </style>
 </head>
@@ -110,36 +114,78 @@ button:hover {
 
 <div class="container">
 
-    <h1>JJS Multi Mesh Converter</h1>
+    <!-- ========================= -->
+    <!-- ENCODER -->
+    <!-- ========================= -->
 
-    <div class="headers">
-        <div>Mesh Texture ID</div>
-        <div>Asset ID</div>
-        <div></div>
+    <div class="section">
+
+        <h1>JJS Mesh Encoder</h1>
+
+        <div class="headers">
+            <div>Mesh Texture ID</div>
+            <div>Asset ID</div>
+            <div></div>
+        </div>
+
+        <div id="meshes"></div>
+
+        <button id="addButton">
+            + Add Mesh
+        </button>
+
+        <button id="generateButton">
+            Generate Single JJS Code
+        </button>
+
+        <textarea
+            id="output"
+            readonly
+            placeholder="Zstandard Base64 code..."
+        ></textarea>
+
+        <button id="copyButton">
+            Copy Code
+        </button>
+
+        <div id="status">
+            Ready
+        </div>
+
     </div>
 
-    <div id="meshes"></div>
 
-    <button id="addButton">
-        + Add Mesh
-    </button>
+    <!-- ========================= -->
+    <!-- DECODER -->
+    <!-- ========================= -->
 
-    <button id="generateButton">
-        Generate Single JJS Code
-    </button>
+    <div class="section">
 
-    <textarea
-        id="output"
-        readonly
-        placeholder="Zstandard Base64 code will appear here..."
-    ></textarea>
+        <h2>KLUv Decoder</h2>
 
-    <button id="copyButton">
-        Copy Code
-    </button>
+        <textarea
+            id="decodeInput"
+            placeholder="Paste KLUv / Base64 code here..."
+        ></textarea>
 
-    <div id="status">
-        Ready
+        <button id="decodeButton">
+            Decode KLUv → JSON
+        </button>
+
+        <textarea
+            id="decodeOutput"
+            readonly
+            placeholder="Decoded JSON will appear here..."
+        ></textarea>
+
+        <button id="copyDecodedButton">
+            Copy JSON
+        </button>
+
+        <div id="decodeStatus">
+            Ready
+        </div>
+
     </div>
 
 </div>
@@ -148,9 +194,14 @@ button:hover {
 <script type="module">
 
 import {
-    compress
+    compress,
+    decompress
 } from "https://esm.sh/@cloudpss/zstd@0.3.23";
 
+
+/* =========================================
+   ENCODER
+========================================= */
 
 const meshes =
     document.getElementById("meshes");
@@ -171,9 +222,7 @@ const status =
     document.getElementById("status");
 
 
-/*
-    Add a mesh row
-*/
+/* Add mesh row */
 function addMesh(texture = "", asset = "") {
 
     const row =
@@ -196,7 +245,7 @@ function addMesh(texture = "", asset = "") {
             value="${asset}"
         >
 
-        <button class="remove" title="Remove">
+        <button class="remove">
             ×
         </button>
     `;
@@ -205,13 +254,10 @@ function addMesh(texture = "", asset = "") {
     row.querySelector(".remove")
         .addEventListener("click", () => {
 
-            /*
-                Don't allow the last row
-                to be removed.
-            */
             if (meshes.children.length > 1) {
                 row.remove();
             }
+
         });
 
 
@@ -219,25 +265,17 @@ function addMesh(texture = "", asset = "") {
 }
 
 
-/*
-    Start with one mesh
-*/
+/* Start with one row */
 addMesh();
 
 
-/*
-    Add another mesh
-*/
+/* Add mesh */
 addButton.addEventListener("click", () => {
-
     addMesh();
-
 });
 
 
-/*
-    Uint8Array → Base64
-*/
+/* Uint8Array → Base64 */
 function bytesToBase64(bytes) {
 
     let binary = "";
@@ -259,31 +297,57 @@ function bytesToBase64(bytes) {
                 )
             );
 
-        binary += String.fromCharCode(
-            ...chunk
-        );
+        binary +=
+            String.fromCharCode(...chunk);
     }
 
     return btoa(binary);
 }
 
 
-/*
-    Generate ONE code from ALL meshes
-*/
+/* Base64 → Uint8Array */
+function base64ToBytes(base64) {
+
+    /*
+        Remove whitespace/newlines
+    */
+    base64 =
+        base64
+            .replace(/\s/g, "");
+
+    const binary =
+        atob(base64);
+
+    const bytes =
+        new Uint8Array(binary.length);
+
+    for (
+        let i = 0;
+        i < binary.length;
+        i++
+    ) {
+
+        bytes[i] =
+            binary.charCodeAt(i);
+    }
+
+    return bytes;
+}
+
+
+/* Generate combined code */
 generateButton.addEventListener(
     "click",
     async () => {
 
         const rows =
-            [...meshes.querySelectorAll(".mesh")];
+            [
+                ...meshes.querySelectorAll(".mesh")
+            ];
 
         const lines = [];
 
 
-        /*
-            Read every mesh
-        */
         for (const row of rows) {
 
             const texture =
@@ -295,39 +359,34 @@ generateButton.addEventListener(
                     .value.trim();
 
 
-            /*
-                Ignore completely empty rows
-            */
             if (!texture && !asset) {
                 continue;
             }
 
 
-            /*
-                Require both IDs
-            */
             if (!texture || !asset) {
 
                 alert(
-                    "Every mesh needs both a Texture ID and an Asset ID."
+                    "Every mesh needs both IDs."
                 );
 
                 return;
             }
 
 
-            /*
-                Add this mesh to Line
-            */
             lines.push({
 
-                TEXTURE: Number(texture),
+                TEXTURE:
+                    Number(texture),
 
-                AMOUNT: Number(asset),
+                AMOUNT:
+                    Number(asset),
 
-                K_NAME: "VISUAL",
+                K_NAME:
+                    "VISUAL",
 
-                EFFECT: "Mesh"
+                EFFECT:
+                    "Mesh"
             });
         }
 
@@ -346,9 +405,6 @@ generateButton.addEventListener(
             "Generating...";
 
 
-        /*
-            Build the combined DATA
-        */
         const innerData = {
 
             Line: lines,
@@ -359,9 +415,6 @@ generateButton.addEventListener(
         };
 
 
-        /*
-            Build the complete JJS structure
-        */
         const jjsData = [
 
             {
@@ -375,7 +428,8 @@ generateButton.addEventListener(
 
                 "TOOL TIP": "",
 
-                DATA: JSON.stringify(innerData),
+                DATA:
+                    JSON.stringify(innerData),
 
                 COOLDOWN: 0
             }
@@ -383,22 +437,12 @@ generateButton.addEventListener(
         ];
 
 
-        /*
-            Compact JSON internally
-        */
         const json =
             JSON.stringify(jjsData);
 
 
         try {
 
-            status.textContent =
-                "Compressing with Zstandard...";
-
-
-            /*
-                JSON → UTF-8
-            */
             const encoder =
                 new TextEncoder();
 
@@ -406,32 +450,24 @@ generateButton.addEventListener(
                 encoder.encode(json);
 
 
-            /*
-                UTF-8 → Zstandard
-            */
             const compressed =
                 await compress(bytes, 3);
 
 
-            /*
-                Zstandard → Base64
-            */
             const base64 =
                 bytesToBase64(compressed);
 
 
-            /*
-                Only display final code
-            */
             output.value =
                 base64;
 
 
             status.textContent =
-                `Done! Combined ${lines.length} mesh${
-                    lines.length === 1 ? "" : "es"
-                } into one code.`;
-
+                `Done! ${lines.length} mesh${
+                    lines.length === 1
+                        ? ""
+                        : "es"
+                } combined.`;
 
         } catch (error) {
 
@@ -441,7 +477,6 @@ generateButton.addEventListener(
                 "Conversion failed.";
 
             alert(
-                "Zstandard error:\n\n" +
                 error.message
             );
         }
@@ -449,9 +484,7 @@ generateButton.addEventListener(
 );
 
 
-/*
-    Copy final code
-*/
+/* Copy encoded code */
 copyButton.addEventListener(
     "click",
     async () => {
@@ -472,7 +505,165 @@ copyButton.addEventListener(
 
 
         status.textContent =
-            "Code copied!";
+            "Copied!";
+    }
+);
+
+
+/* =========================================
+   DECODER
+========================================= */
+
+const decodeInput =
+    document.getElementById("decodeInput");
+
+const decodeButton =
+    document.getElementById("decodeButton");
+
+const decodeOutput =
+    document.getElementById("decodeOutput");
+
+const decodeStatus =
+    document.getElementById("decodeStatus");
+
+const copyDecodedButton =
+    document.getElementById("copyDecodedButton");
+
+
+/*
+    Decode:
+
+    Base64
+       ↓
+    Zstandard
+       ↓
+    UTF-8
+       ↓
+    JSON
+*/
+decodeButton.addEventListener(
+    "click",
+    async () => {
+
+        const input =
+            decodeInput.value.trim();
+
+
+        if (!input) {
+
+            alert(
+                "Paste a KLUv/Base64 code first."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            decodeStatus.textContent =
+                "Decoding Base64...";
+
+
+            /*
+                Base64 → bytes
+            */
+            const compressed =
+                base64ToBytes(input);
+
+
+            decodeStatus.textContent =
+                "Decompressing Zstandard...";
+
+
+            /*
+                Zstandard → original bytes
+            */
+            const decompressed =
+                await decompress(
+                    compressed
+                );
+
+
+            decodeStatus.textContent =
+                "Converting to JSON...";
+
+
+            /*
+                Bytes → UTF-8 string
+            */
+            const decoder =
+                new TextDecoder();
+
+
+            const jsonText =
+                decoder.decode(
+                    decompressed
+                );
+
+
+            /*
+                Verify it's valid JSON
+            */
+            const parsed =
+                JSON.parse(jsonText);
+
+
+            /*
+                Pretty-print JSON
+            */
+            decodeOutput.value =
+                JSON.stringify(
+                    parsed,
+                    null,
+                    2
+                );
+
+
+            decodeStatus.textContent =
+                "Decoded successfully!";
+
+        } catch (error) {
+
+            console.error(error);
+
+            decodeStatus.textContent =
+                "Could not decode code.";
+
+            decodeOutput.value = "";
+
+            alert(
+                "Decode failed.\n\n" +
+                "Make sure the code is Base64 containing standard Zstandard-compressed JSON.\n\n" +
+                error.message
+            );
+        }
+    }
+);
+
+
+/* Copy decoded JSON */
+copyDecodedButton.addEventListener(
+    "click",
+    async () => {
+
+        if (!decodeOutput.value) {
+
+            alert(
+                "Decode a code first."
+            );
+
+            return;
+        }
+
+
+        await navigator.clipboard.writeText(
+            decodeOutput.value
+        );
+
+
+        decodeStatus.textContent =
+            "JSON copied!";
     }
 );
 
