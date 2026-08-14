@@ -3,85 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coverter</title>
+<title>JJS Multi Mesh Converter</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-    }
+* {
+    box-sizing: border-box;
+}
 
-    body {
-        margin: 0;
-        background: #101010;
-        color: white;
-        font-family: Arial, sans-serif;
-    }
+body {
+    margin: 0;
+    background: #101010;
+    color: white;
+    font-family: Arial, sans-serif;
+}
 
-    .container {
-        width: min(700px, 92%);
-        margin: 50px auto;
-        padding: 25px;
-        background: #1b1b1b;
-        border-radius: 16px;
-    }
+.container {
+    width: min(750px, 94%);
+    margin: 40px auto;
+    padding: 25px;
+    background: #1b1b1b;
+    border-radius: 16px;
+}
 
-    h1 {
-        text-align: center;
-        margin-bottom: 25px;
-    }
+h1 {
+    text-align: center;
+    margin-bottom: 25px;
+}
 
-    label {
-        display: block;
-        margin-top: 15px;
-        margin-bottom: 6px;
-    }
+.mesh {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+}
 
-    input {
-        width: 100%;
-        padding: 12px;
-        border: 0;
-        border-radius: 8px;
-        background: #292929;
-        color: white;
-        font-size: 16px;
-        outline: none;
-    }
+input {
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    border-radius: 8px;
+    background: #292929;
+    color: white;
+    font-size: 15px;
+    outline: none;
+}
 
-    button {
-        width: 100%;
-        margin-top: 20px;
-        padding: 13px;
-        border: 0;
-        border-radius: 8px;
-        background: #5865f2;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-    }
+button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 13px;
+    border: 0;
+    border-radius: 8px;
+    background: #5865f2;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
 
-    button:hover {
-        background: #4752c4;
-    }
+button:hover {
+    background: #4752c4;
+}
 
-    textarea {
-        width: 100%;
-        height: 220px;
-        margin-top: 20px;
-        padding: 12px;
-        resize: vertical;
-        border: 0;
-        border-radius: 8px;
-        background: #080808;
-        color: #00ff88;
-        font-family: monospace;
-        font-size: 13px;
-    }
+.remove {
+    width: 45px;
+    margin: 0;
+    padding: 11px;
+    background: #d33;
+}
 
-    #status {
-        margin-top: 15px;
-        text-align: center;
-        color: #aaa;
-    }
+.remove:hover {
+    background: #a22;
+}
+
+#output {
+    width: 100%;
+    height: 220px;
+    margin-top: 20px;
+    padding: 12px;
+    resize: vertical;
+    border: 0;
+    border-radius: 8px;
+    background: #080808;
+    color: #00ff88;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+#status {
+    margin-top: 15px;
+    text-align: center;
+    color: #aaa;
+}
+
+.headers {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    color: #aaa;
+    font-size: 13px;
+}
 </style>
 </head>
 
@@ -89,36 +110,32 @@
 
 <div class="container">
 
-    <h1>JJS Mesh Converter</h1>
+    <h1>JJS Multi Mesh Converter</h1>
 
-    <label>Mesh Texture ID</label>
+    <div class="headers">
+        <div>Mesh Texture ID</div>
+        <div>Asset ID</div>
+        <div></div>
+    </div>
 
-    <input
-        id="textureId"
-        type="number"
-        placeholder="Example: 2"
-    >
+    <div id="meshes"></div>
 
-    <label>Asset ID</label>
-
-    <input
-        id="assetId"
-        type="number"
-        placeholder="Example: 2"
-    >
+    <button id="addButton">
+        + Add Mesh
+    </button>
 
     <button id="generateButton">
-        Generate JJS Code
+        Generate Single JJS Code
     </button>
 
     <textarea
-        id="base64Output"
+        id="output"
         readonly
-        placeholder="jjs code output will appear here..."
+        placeholder="Zstandard Base64 code will appear here..."
     ></textarea>
 
     <button id="copyButton">
-        Copy
+        Copy Code
     </button>
 
     <div id="status">
@@ -127,6 +144,7 @@
 
 </div>
 
+
 <script type="module">
 
 import {
@@ -134,23 +152,87 @@ import {
 } from "https://esm.sh/@cloudpss/zstd@0.3.23";
 
 
-const textureInput =
-    document.getElementById("textureId");
+const meshes =
+    document.getElementById("meshes");
 
-const assetInput =
-    document.getElementById("assetId");
-
-const output =
-    document.getElementById("base64Output");
-
-const status =
-    document.getElementById("status");
+const addButton =
+    document.getElementById("addButton");
 
 const generateButton =
     document.getElementById("generateButton");
 
 const copyButton =
     document.getElementById("copyButton");
+
+const output =
+    document.getElementById("output");
+
+const status =
+    document.getElementById("status");
+
+
+/*
+    Add a mesh row
+*/
+function addMesh(texture = "", asset = "") {
+
+    const row =
+        document.createElement("div");
+
+    row.className = "mesh";
+
+    row.innerHTML = `
+        <input
+            class="texture"
+            type="number"
+            placeholder="Texture ID"
+            value="${texture}"
+        >
+
+        <input
+            class="asset"
+            type="number"
+            placeholder="Asset ID"
+            value="${asset}"
+        >
+
+        <button class="remove" title="Remove">
+            ×
+        </button>
+    `;
+
+
+    row.querySelector(".remove")
+        .addEventListener("click", () => {
+
+            /*
+                Don't allow the last row
+                to be removed.
+            */
+            if (meshes.children.length > 1) {
+                row.remove();
+            }
+        });
+
+
+    meshes.appendChild(row);
+}
+
+
+/*
+    Start with one mesh
+*/
+addMesh();
+
+
+/*
+    Add another mesh
+*/
+addButton.addEventListener("click", () => {
+
+    addMesh();
+
+});
 
 
 /*
@@ -168,12 +250,18 @@ function bytesToBase64(bytes) {
         i += chunkSize
     ) {
 
-        const chunk = bytes.subarray(
-            i,
-            Math.min(i + chunkSize, bytes.length)
-        );
+        const chunk =
+            bytes.subarray(
+                i,
+                Math.min(
+                    i + chunkSize,
+                    bytes.length
+                )
+            );
 
-        binary += String.fromCharCode(...chunk);
+        binary += String.fromCharCode(
+            ...chunk
+        );
     }
 
     return btoa(binary);
@@ -181,39 +269,58 @@ function bytesToBase64(bytes) {
 
 
 /*
-    Generate JJS code
+    Generate ONE code from ALL meshes
 */
-generateButton.addEventListener("click", async () => {
+generateButton.addEventListener(
+    "click",
+    async () => {
 
-    const texture =
-        textureInput.value.trim();
+        const rows =
+            [...meshes.querySelectorAll(".mesh")];
 
-    const asset =
-        assetInput.value.trim();
-
-
-    if (!texture || !asset) {
-
-        alert(
-            "Enter both the Mesh Texture ID and Asset ID."
-        );
-
-        return;
-    }
+        const lines = [];
 
 
-    status.textContent =
-        "Generating...";
+        /*
+            Read every mesh
+        */
+        for (const row of rows) {
+
+            const texture =
+                row.querySelector(".texture")
+                    .value.trim();
+
+            const asset =
+                row.querySelector(".asset")
+                    .value.trim();
 
 
-    /*
-        Create the JJS DATA object
-    */
-    const innerData = {
+            /*
+                Ignore completely empty rows
+            */
+            if (!texture && !asset) {
+                continue;
+            }
 
-        Line: [
 
-            {
+            /*
+                Require both IDs
+            */
+            if (!texture || !asset) {
+
+                alert(
+                    "Every mesh needs both a Texture ID and an Asset ID."
+                );
+
+                return;
+            }
+
+
+            /*
+                Add this mesh to Line
+            */
+            lines.push({
+
                 TEXTURE: Number(texture),
 
                 AMOUNT: Number(asset),
@@ -221,126 +328,153 @@ generateButton.addEventListener("click", async () => {
                 K_NAME: "VISUAL",
 
                 EFFECT: "Mesh"
-            }
-
-        ],
-
-        Prop: [],
-
-        Req: []
-    };
-
-
-    /*
-        Create complete JJS JSON
-    */
-    const jjsData = [
-
-        {
-            ADD: false,
-
-            NAME: "IMPORT",
-
-            K_NAME: "SKILL",
-
-            KEY: 1,
-
-            "TOOL TIP": "",
-
-            DATA: JSON.stringify(innerData),
-
-            COOLDOWN: 0
+            });
         }
 
-    ];
 
+        if (lines.length === 0) {
 
-    /*
-        JSON is generated internally.
-        It is NOT shown to the user.
-    */
-    const json =
-        JSON.stringify(jjsData);
+            alert(
+                "Add at least one mesh."
+            );
 
-
-    try {
-
-        status.textContent =
-            "Compressing...";
-
-
-        /*
-            JSON → UTF-8
-        */
-        const encoder =
-            new TextEncoder();
-
-        const bytes =
-            encoder.encode(json);
-
-
-        /*
-            UTF-8 → Zstandard
-        */
-        const compressed =
-            await compress(bytes, 3);
-
-
-        /*
-            Zstandard → Base64
-        */
-        const base64 =
-            bytesToBase64(compressed);
-
-
-        /*
-            Only show final output
-        */
-        output.value =
-            base64;
+            return;
+        }
 
 
         status.textContent =
-            "Done!";
+            "Generating...";
 
 
-    } catch (error) {
+        /*
+            Build the combined DATA
+        */
+        const innerData = {
 
-        console.error(error);
+            Line: lines,
 
-        status.textContent =
-            "Conversion failed.";
+            Prop: [],
 
-        alert(
-            "Zstandard error:\n\n" +
-            error.message
-        );
+            Req: []
+        };
+
+
+        /*
+            Build the complete JJS structure
+        */
+        const jjsData = [
+
+            {
+                ADD: false,
+
+                NAME: "IMPORT",
+
+                K_NAME: "SKILL",
+
+                KEY: 1,
+
+                "TOOL TIP": "",
+
+                DATA: JSON.stringify(innerData),
+
+                COOLDOWN: 0
+            }
+
+        ];
+
+
+        /*
+            Compact JSON internally
+        */
+        const json =
+            JSON.stringify(jjsData);
+
+
+        try {
+
+            status.textContent =
+                "Compressing with Zstandard...";
+
+
+            /*
+                JSON → UTF-8
+            */
+            const encoder =
+                new TextEncoder();
+
+            const bytes =
+                encoder.encode(json);
+
+
+            /*
+                UTF-8 → Zstandard
+            */
+            const compressed =
+                await compress(bytes, 3);
+
+
+            /*
+                Zstandard → Base64
+            */
+            const base64 =
+                bytesToBase64(compressed);
+
+
+            /*
+                Only display final code
+            */
+            output.value =
+                base64;
+
+
+            status.textContent =
+                `Done! Combined ${lines.length} mesh${
+                    lines.length === 1 ? "" : "es"
+                } into one code.`;
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            status.textContent =
+                "Conversion failed.";
+
+            alert(
+                "Zstandard error:\n\n" +
+                error.message
+            );
+        }
     }
-
-});
+);
 
 
 /*
     Copy final code
 */
-copyButton.addEventListener("click", async () => {
+copyButton.addEventListener(
+    "click",
+    async () => {
 
-    if (!output.value) {
+        if (!output.value) {
 
-        alert("Generate a JJS code first.");
+            alert(
+                "Generate a code first."
+            );
 
-        return;
+            return;
+        }
+
+
+        await navigator.clipboard.writeText(
+            output.value
+        );
+
+
+        status.textContent =
+            "Code copied!";
     }
-
-
-    await navigator.clipboard.writeText(
-        output.value
-    );
-
-
-    status.textContent =
-        "Copied!";
-});
+);
 
 </script>
 
