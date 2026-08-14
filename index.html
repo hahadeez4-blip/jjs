@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JJS Mesh Converter</title>
+<title>Coverter</title>
 
 <style>
     * {
@@ -18,8 +18,8 @@
     }
 
     .container {
-        width: min(750px, 92%);
-        margin: 40px auto;
+        width: min(700px, 92%);
+        margin: 50px auto;
         padding: 25px;
         background: #1b1b1b;
         border-radius: 16px;
@@ -27,6 +27,7 @@
 
     h1 {
         text-align: center;
+        margin-bottom: 25px;
     }
 
     label {
@@ -64,8 +65,8 @@
 
     textarea {
         width: 100%;
-        min-height: 180px;
-        margin-top: 15px;
+        height: 220px;
+        margin-top: 20px;
         padding: 12px;
         resize: vertical;
         border: 0;
@@ -73,6 +74,7 @@
         background: #080808;
         color: #00ff88;
         font-family: monospace;
+        font-size: 13px;
     }
 
     #status {
@@ -90,6 +92,7 @@
     <h1>JJS Mesh Converter</h1>
 
     <label>Mesh Texture ID</label>
+
     <input
         id="textureId"
         type="number"
@@ -97,6 +100,7 @@
     >
 
     <label>Asset ID</label>
+
     <input
         id="assetId"
         type="number"
@@ -108,25 +112,20 @@
     </button>
 
     <textarea
-        id="jsonOutput"
-        readonly
-        placeholder="Generated JSON..."
-    ></textarea>
-
-    <textarea
         id="base64Output"
         readonly
-        placeholder="Zstandard → Base64 output..."
+        placeholder="jjs code output will appear here..."
     ></textarea>
 
     <button id="copyButton">
-        Copy Base64
+        Copy
     </button>
 
-    <div id="status">Ready</div>
+    <div id="status">
+        Ready
+    </div>
 
 </div>
-
 
 <script type="module">
 
@@ -141,10 +140,7 @@ const textureInput =
 const assetInput =
     document.getElementById("assetId");
 
-const jsonOutput =
-    document.getElementById("jsonOutput");
-
-const base64Output =
+const output =
     document.getElementById("base64Output");
 
 const status =
@@ -158,7 +154,7 @@ const copyButton =
 
 
 /*
-    Convert Uint8Array → Base64
+    Uint8Array → Base64
 */
 function bytesToBase64(bytes) {
 
@@ -185,17 +181,7 @@ function bytesToBase64(bytes) {
 
 
 /*
-    Generate everything automatically:
-
-    IDs
-      ↓
-    JJS JSON
-      ↓
-    UTF-8
-      ↓
-    Zstandard
-      ↓
-    Base64
+    Generate JJS code
 */
 generateButton.addEventListener("click", async () => {
 
@@ -208,18 +194,20 @@ generateButton.addEventListener("click", async () => {
 
     if (!texture || !asset) {
 
-        alert("Enter both the Texture ID and Asset ID.");
+        alert(
+            "Enter both the Mesh Texture ID and Asset ID."
+        );
 
         return;
     }
 
 
     status.textContent =
-        "Generating JJS JSON...";
+        "Generating...";
 
 
     /*
-        Inner DATA object
+        Create the JJS DATA object
     */
     const innerData = {
 
@@ -244,7 +232,7 @@ generateButton.addEventListener("click", async () => {
 
 
     /*
-        Complete JJS structure
+        Create complete JJS JSON
     */
     const jjsData = [
 
@@ -268,26 +256,17 @@ generateButton.addEventListener("click", async () => {
 
 
     /*
-        Compact JSON.
-
-        This exact string is what gets
-        compressed.
+        JSON is generated internally.
+        It is NOT shown to the user.
     */
     const json =
         JSON.stringify(jjsData);
 
 
-    /*
-        Show JSON
-    */
-    jsonOutput.value =
-        JSON.stringify(jjsData, null, 2);
-
-
     try {
 
         status.textContent =
-            "Compressing with Zstandard...";
+            "Compressing...";
 
 
         /*
@@ -315,14 +294,14 @@ generateButton.addEventListener("click", async () => {
 
 
         /*
-            Show final JJS code
+            Only show final output
         */
-        base64Output.value =
+        output.value =
             base64;
 
 
         status.textContent =
-            "Done! JSON → Zstandard → Base64";
+            "Done!";
 
 
     } catch (error) {
@@ -330,7 +309,7 @@ generateButton.addEventListener("click", async () => {
         console.error(error);
 
         status.textContent =
-            "Zstandard conversion failed.";
+            "Conversion failed.";
 
         alert(
             "Zstandard error:\n\n" +
@@ -342,25 +321,25 @@ generateButton.addEventListener("click", async () => {
 
 
 /*
-    Copy final Base64 code
+    Copy final code
 */
 copyButton.addEventListener("click", async () => {
 
-    if (!base64Output.value) {
+    if (!output.value) {
 
-        alert("Generate a code first.");
+        alert("Generate a JJS code first.");
 
         return;
     }
 
 
     await navigator.clipboard.writeText(
-        base64Output.value
+        output.value
     );
 
 
     status.textContent =
-        "Base64 copied!";
+        "Copied!";
 });
 
 </script>
