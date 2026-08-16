@@ -4,24 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>JJS Mesh Converter</title>
+<title>JJS Converter</title>
 
 <style>
-
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    background: #0e0e0e;
+    background: #0d0d0d;
     color: white;
     font-family: Arial, sans-serif;
 }
 
 .container {
-    width: min(850px, 94%);
+    width: min(900px, 94%);
     margin: 40px auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
 .section {
@@ -29,39 +33,16 @@ body {
     padding: 25px;
     margin-bottom: 25px;
     border-radius: 16px;
-    box-shadow: 0 5px 25px rgba(0,0,0,.25);
-}
-
-h1 {
-    text-align: center;
-    margin-top: 0;
+    box-shadow: 0 8px 30px rgba(0,0,0,.25);
 }
 
 h2 {
     margin-top: 0;
-    text-align: center;
 }
 
 .description {
     color: #999;
-    text-align: center;
     margin-bottom: 20px;
-}
-
-.mesh {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 10px;
-    margin-top: 12px;
-    align-items: center;
-}
-
-.headers {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 10px;
-    color: #999;
-    font-size: 13px;
 }
 
 input,
@@ -84,8 +65,8 @@ textarea {
 
 button {
     width: 100%;
-    margin-top: 15px;
     padding: 13px;
+    margin-top: 15px;
     border: none;
     border-radius: 8px;
     background: #5865f2;
@@ -108,26 +89,54 @@ button:hover {
     background: #a22;
 }
 
+.mesh {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.headers {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    color: #999;
+    font-size: 13px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.field label {
+    display: block;
+    color: #aaa;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
 .output {
-    color: #00ff88;
     background: #080808;
+    color: #00ff88;
 }
 
 .status {
-    margin-top: 15px;
     text-align: center;
     color: #aaa;
-}
-
-.error {
-    color: #ff5555;
+    margin-top: 15px;
 }
 
 .success {
     color: #55ff88;
 }
 
-@media (max-width: 600px) {
+.error {
+    color: #ff5555;
+}
+
+@media (max-width: 650px) {
 
     .mesh {
         grid-template-columns: 1fr;
@@ -141,8 +150,10 @@ button:hover {
         width: 100%;
     }
 
+    .grid {
+        grid-template-columns: 1fr;
+    }
 }
-
 </style>
 </head>
 
@@ -150,136 +161,185 @@ button:hover {
 
 <div class="container">
 
-    <h1>JJS Mesh Converter</h1>
+<h1>JJS Converter</h1>
 
 
-    <!-- ================================================= -->
-    <!-- MULTI MESH ENCODER -->
-    <!-- ================================================= -->
+<!-- ================================================= -->
+<!-- MESH CONVERTER -->
+<!-- ================================================= -->
 
-    <div class="section">
+<div class="section">
 
-        <h2>Mesh IDs → JJS</h2>
+<h2>🔷 Mesh → JJS</h2>
 
-        <div class="description">
-            Add multiple Texture IDs and Asset IDs and combine them
-            into one JJS Zstandard/Base64 code.
-        </div>
+<div class="description">
+Add multiple mesh texture/asset pairs and combine them into one JJS code.
+</div>
 
-        <div class="headers">
-            <div>Texture ID</div>
-            <div>Asset ID</div>
-            <div></div>
-        </div>
+<div class="headers">
+    <div>Texture ID</div>
+    <div>Asset ID</div>
+    <div></div>
+</div>
 
-        <div id="meshes"></div>
+<div id="meshes"></div>
 
-        <button id="addButton">
-            + Add Mesh
-        </button>
+<button id="addMeshButton">
++ Add Mesh
+</button>
 
-        <button id="generateButton">
-            Generate Single JJS Code
-        </button>
+<button id="generateMeshButton">
+Generate Mesh JJS Code
+</button>
 
-        <textarea
-            id="output"
-            class="output"
-            readonly
-            placeholder="Zstandard Base64 output..."
-        ></textarea>
+<textarea
+id="meshOutput"
+class="output"
+readonly
+placeholder="Zstandard Base64 output..."
+></textarea>
 
-        <button id="copyButton">
-            Copy Code
-        </button>
+<button id="copyMeshButton">
+Copy Mesh Code
+</button>
 
-        <div id="status" class="status">
-            Ready
-        </div>
+<div id="meshStatus" class="status">
+Ready
+</div>
 
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- ACCESSORY CONVERTER -->
-    <!-- ================================================= -->
-
-    <div class="section">
-
-        <h2>Accessory Code → JJS</h2>
-
-        <div class="description">
-            Paste your Roblox Accessories JSON and automatically
-            convert all MeshId and TextureId values into one JJS code.
-        </div>
-
-        <textarea
-            id="accessoryInput"
-            placeholder='Paste Accessories JSON here...
-
-Example:
-{"Accessories":[{"TextureId":"rbxassetid://123","MeshId":"rbxassetid://456"}]}'
-        ></textarea>
-
-        <button id="accessoryGenerateButton">
-            Convert Accessories → JJS
-        </button>
-
-        <textarea
-            id="accessoryOutput"
-            class="output"
-            readonly
-            placeholder="Zstandard Base64 JJS code..."
-        ></textarea>
-
-        <button id="accessoryCopyButton">
-            Copy Accessory JJS Code
-        </button>
-
-        <div id="accessoryStatus" class="status">
-            Ready
-        </div>
-
-    </div>
+</div>
 
 
-    <!-- ================================================= -->
-    <!-- K L U V DECODER -->
-    <!-- ================================================= -->
+<!-- ================================================= -->
+<!-- ACCESSORY CONVERTER -->
+<!-- ================================================= -->
 
-    <div class="section">
+<div class="section">
 
-        <h2>KLUv Decoder</h2>
+<h2>🎩 Accessories → JJS</h2>
 
-        <div class="description">
-            Paste a Zstandard/Base64 KLUv code to decode it back into JSON.
-        </div>
+<div class="description">
+Paste your Roblox Accessories JSON. TextureId becomes TEXTURE and MeshId becomes AMOUNT.
+</div>
 
-        <textarea
-            id="decodeInput"
-            placeholder="Paste KLUv / Base64 code here..."
-        ></textarea>
+<textarea
+id="accessoryInput"
+placeholder='{"Accessories":[{"TextureId":"rbxassetid://123","MeshId":"rbxassetid://456"}]}'
+></textarea>
 
-        <button id="decodeButton">
-            Decode KLUv → JSON
-        </button>
+<button id="generateAccessoryButton">
+Convert Accessories → JJS
+</button>
 
-        <textarea
-            id="decodeOutput"
-            class="output"
-            readonly
-            placeholder="Decoded JSON..."
-        ></textarea>
+<textarea
+id="accessoryOutput"
+class="output"
+readonly
+placeholder="Zstandard Base64 output..."
+></textarea>
 
-        <button id="copyDecodedButton">
-            Copy JSON
-        </button>
+<button id="copyAccessoryButton">
+Copy Accessory Code
+</button>
 
-        <div id="decodeStatus" class="status">
-            Ready
-        </div>
+<div id="accessoryStatus" class="status">
+Ready
+</div>
 
-    </div>
+</div>
+
+
+<!-- ================================================= -->
+<!-- CLOTHING CONVERTER -->
+<!-- ================================================= -->
+
+<div class="section">
+
+<h2>👕 Clothing → JJS</h2>
+
+<div class="description">
+Paste your Roblox clothing JSON. The converter extracts the
+Shirt/Pants texture and mesh IDs, creates the JJS clothing data,
+then converts it directly to Zstandard → Base64.
+</div>
+
+<textarea
+id="clothingInput"
+placeholder='{
+  "Clothing": {
+    "Shirt": {
+      "TextureId": "607785311",
+      "Torso": "76316612146587",
+      "RightArm": "131826949635623",
+      "LeftArm": "82557091159947"
+    },
+    "Pants": {
+      "TextureId": "867826313",
+      "RightLeg": "93063343924594",
+      "LeftLeg": "109302786609504"
+    }
+  }
+}'></textarea>
+
+<button id="generateClothingButton">
+Convert Clothing → JJS
+</button>
+
+<textarea
+id="clothingOutput"
+class="output"
+readonly
+placeholder="Zstandard Base64 clothing code..."
+></textarea>
+
+<button id="copyClothingButton">
+Copy Clothing Code
+</button>
+
+<div id="clothingStatus" class="status">
+Ready
+</div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- K L U V DECODER -->
+<!-- ================================================= -->
+
+<div class="section">
+
+<h2>🔓 KLUv Decoder</h2>
+
+<div class="description">
+Paste a Zstandard/Base64 KLUv code and decode it back into JSON.
+</div>
+
+<textarea
+id="decodeInput"
+placeholder="Paste KLUv / Base64 code here..."
+></textarea>
+
+<button id="decodeButton">
+Decode KLUv → JSON
+</button>
+
+<textarea
+id="decodeOutput"
+class="output"
+readonly
+placeholder="Decoded JSON..."
+></textarea>
+
+<button id="copyDecodedButton">
+Copy JSON
+</button>
+
+<div id="decodeStatus" class="status">
+Ready
+</div>
+
+</div>
 
 </div>
 
@@ -359,7 +419,7 @@ function base64ToBytes(base64) {
 /*
     JSON → Zstandard → Base64
 */
-async function jsonToJJS(json) {
+async function jsonToBase64(json) {
 
     const encoder =
         new TextEncoder();
@@ -375,76 +435,7 @@ async function jsonToJJS(json) {
 
 
 /*
-    Extract a Roblox numeric asset ID.
-
-    Supports:
-
-    rbxassetid://123456
-
-    http://www.roblox.com/asset/?id=123456
-
-    https://www.roblox.com/asset/?id=123456
-
-    Also handles accidental spaces.
-*/
-function extractRobloxId(value) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-        return null;
-    }
-
-    const text =
-        String(value).trim();
-
-
-    /*
-        rbxassetid://123
-    */
-    const rbxMatch =
-        text.match(
-            /rbxassetid:\/\/(\d+)/i
-        );
-
-    if (rbxMatch) {
-        return rbxMatch[1];
-    }
-
-
-    /*
-        roblox.com/asset/?id=123
-    */
-    const urlMatch =
-        text.match(
-            /[?&]id=(\d+)/i
-        );
-
-    if (urlMatch) {
-        return urlMatch[1];
-    }
-
-
-    /*
-        If the user only supplied a number.
-    */
-    const numberMatch =
-        text.match(
-            /^\d+$/
-        );
-
-    if (numberMatch) {
-        return numberMatch[0];
-    }
-
-
-    return null;
-}
-
-
-/*
-    Create JJS structure from mesh pairs.
+    Create standard JJS IMPORT object.
 */
 function createJJS(lines) {
 
@@ -481,36 +472,75 @@ function createJJS(lines) {
 }
 
 
+/*
+    Extract Roblox ID.
+
+    Supports:
+
+    rbxassetid://123
+
+    http://www.roblox.com/asset/?id=123
+
+    https://www.roblox.com/asset/?id=123
+
+    plain 123
+*/
+function extractRobloxId(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return null;
+    }
+
+    const text =
+        String(value).trim();
+
+
+    let match =
+        text.match(
+            /rbxassetid:\/\/(\d+)/i
+        );
+
+    if (match) {
+        return match[1];
+    }
+
+
+    match =
+        text.match(
+            /[?&]id=(\d+)/i
+        );
+
+    if (match) {
+        return match[1];
+    }
+
+
+    match =
+        text.match(
+            /^\d+$/
+        );
+
+    if (match) {
+        return match[0];
+    }
+
+
+    return null;
+}
+
+
 /* =====================================================
-   MULTI MESH ENCODER
+   MESH CONVERTER
 ===================================================== */
 
 const meshes =
     document.getElementById("meshes");
 
-const addButton =
-    document.getElementById("addButton");
 
-const generateButton =
-    document.getElementById("generateButton");
-
-const copyButton =
-    document.getElementById("copyButton");
-
-const output =
-    document.getElementById("output");
-
-const status =
-    document.getElementById("status");
-
-
-/*
-    Add mesh row.
-*/
-function addMesh(
-    texture = "",
-    asset = ""
-) {
+function addMesh() {
 
     const row =
         document.createElement("div");
@@ -524,16 +554,12 @@ function addMesh(
         <input
             class="texture"
             type="number"
-            placeholder="Texture ID"
-            value="${texture}"
-        >
+            placeholder="Texture ID">
 
         <input
             class="asset"
             type="number"
-            placeholder="Asset ID"
-            value="${asset}"
-        >
+            placeholder="Asset ID">
 
         <button class="remove">
             ×
@@ -543,98 +569,233 @@ function addMesh(
 
 
     row.querySelector(".remove")
-        .addEventListener(
-            "click",
-            () => {
+        .onclick = () => {
 
-                if (
-                    meshes.children.length > 1
-                ) {
-                    row.remove();
-                }
-
+            if (
+                meshes.children.length > 1
+            ) {
+                row.remove();
             }
-        );
+
+        };
 
 
     meshes.appendChild(row);
 }
 
 
-/*
-    Start with one row.
-*/
 addMesh();
 
 
-/*
-    Add another row.
-*/
-addButton.addEventListener(
-    "click",
-    () => {
+document.getElementById(
+    "addMeshButton"
+).onclick = addMesh;
 
-        addMesh();
+
+document.getElementById(
+    "generateMeshButton"
+).onclick = async () => {
+
+    const rows =
+        [...meshes.querySelectorAll(".mesh")];
+
+    const lines = [];
+
+
+    for (const row of rows) {
+
+        const texture =
+            row.querySelector(".texture")
+                .value.trim();
+
+        const asset =
+            row.querySelector(".asset")
+                .value.trim();
+
+
+        if (!texture && !asset) {
+            continue;
+        }
+
+
+        if (!texture || !asset) {
+
+            alert(
+                "Every mesh needs both IDs."
+            );
+
+            return;
+        }
+
+
+        lines.push({
+
+            TEXTURE:
+                Number(texture),
+
+            AMOUNT:
+                Number(asset),
+
+            K_NAME:
+                "VISUAL",
+
+            EFFECT:
+                "Mesh"
+
+        });
 
     }
-);
 
 
-/*
-    Generate mesh JJS.
-*/
-generateButton.addEventListener(
-    "click",
-    async () => {
+    if (!lines.length) {
 
-        const rows =
-            [
-                ...meshes.querySelectorAll(
-                    ".mesh"
-                )
-            ];
+        alert(
+            "Add at least one mesh."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const jjs =
+            createJJS(lines);
+
+        const code =
+            await jsonToBase64(
+                JSON.stringify(jjs)
+            );
+
+
+        document.getElementById(
+            "meshOutput"
+        ).value = code;
+
+
+        document.getElementById(
+            "meshStatus"
+        ).className =
+            "status success";
+
+
+        document.getElementById(
+            "meshStatus"
+        ).textContent =
+            "Done!";
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "meshStatus"
+        ).className =
+            "status error";
+
+        document.getElementById(
+            "meshStatus"
+        ).textContent =
+            "Conversion failed.";
+
+        alert(error.message);
+    }
+
+};
+
+
+/* Mesh copy */
+document.getElementById(
+    "copyMeshButton"
+).onclick = async () => {
+
+    const output =
+        document.getElementById(
+            "meshOutput"
+        );
+
+    if (!output.value) {
+        alert("Generate a code first.");
+        return;
+    }
+
+    await navigator.clipboard.writeText(
+        output.value
+    );
+
+    document.getElementById(
+        "meshStatus"
+    ).textContent =
+        "Copied!";
+};
+
+
+/* =====================================================
+   ACCESSORY CONVERTER
+===================================================== */
+
+document.getElementById(
+    "generateAccessoryButton"
+).onclick = async () => {
+
+    const input =
+        document.getElementById(
+            "accessoryInput"
+        ).value.trim();
+
+
+    if (!input) {
+
+        alert(
+            "Paste your Accessories JSON first."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const data =
+            JSON.parse(input);
+
+
+        if (
+            !Array.isArray(
+                data.Accessories
+            )
+        ) {
+
+            throw new Error(
+                'Missing "Accessories" array.'
+            );
+        }
 
 
         const lines = [];
 
 
-        for (const row of rows) {
+        for (
+            const accessory
+            of data.Accessories
+        ) {
 
             const texture =
-                row.querySelector(
-                    ".texture"
-                ).value.trim();
-
-            const asset =
-                row.querySelector(
-                    ".asset"
-                ).value.trim();
-
-
-            /*
-                Ignore completely empty rows.
-            */
-            if (
-                !texture &&
-                !asset
-            ) {
-                continue;
-            }
-
-
-            /*
-                Require both IDs.
-            */
-            if (
-                !texture ||
-                !asset
-            ) {
-
-                alert(
-                    "Every mesh needs both IDs."
+                extractRobloxId(
+                    accessory.TextureId
                 );
 
-                return;
+            const mesh =
+                extractRobloxId(
+                    accessory.MeshId
+                );
+
+
+            if (
+                !texture ||
+                !mesh
+            ) {
+                continue;
             }
 
 
@@ -644,7 +805,7 @@ generateButton.addEventListener(
                     Number(texture),
 
                 AMOUNT:
-                    Number(asset),
+                    Number(mesh),
 
                 K_NAME:
                     "VISUAL",
@@ -653,534 +814,843 @@ generateButton.addEventListener(
                     "Mesh"
 
             });
+
         }
 
 
-        if (
-            lines.length === 0
-        ) {
+        if (!lines.length) {
 
-            alert(
-                "Add at least one mesh."
-            );
-
-            return;
-        }
-
-
-        try {
-
-            status.textContent =
-                "Compressing...";
-
-
-            const jjsData =
-                createJJS(lines);
-
-
-            const json =
-                JSON.stringify(jjsData);
-
-
-            const base64 =
-                await jsonToJJS(json);
-
-
-            output.value =
-                base64;
-
-
-            status.textContent =
-                `Done! ${lines.length} mesh${
-                    lines.length === 1
-                        ? ""
-                        : "es"
-                } combined.`;
-
-        } catch (error) {
-
-            console.error(error);
-
-            status.textContent =
-                "Conversion failed.";
-
-            alert(
-                error.message
+            throw new Error(
+                "No valid accessories found."
             );
         }
 
+
+        const jjs =
+            createJJS(lines);
+
+
+        const code =
+            await jsonToBase64(
+                JSON.stringify(jjs)
+            );
+
+
+        document.getElementById(
+            "accessoryOutput"
+        ).value = code;
+
+
+        document.getElementById(
+            "accessoryStatus"
+        ).className =
+            "status success";
+
+
+        document.getElementById(
+            "accessoryStatus"
+        ).textContent =
+            `Done! ${lines.length} accessories converted.`;
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "accessoryStatus"
+        ).className =
+            "status error";
+
+
+        document.getElementById(
+            "accessoryStatus"
+        ).textContent =
+            "Conversion failed.";
+
+
+        alert(
+            error.message
+        );
     }
-);
+
+};
 
 
-/*
-    Copy mesh code.
-*/
-copyButton.addEventListener(
-    "click",
-    async () => {
+/* Accessory copy */
+document.getElementById(
+    "copyAccessoryButton"
+).onclick = async () => {
 
-        if (!output.value) {
-
-            alert(
-                "Generate a code first."
-            );
-
-            return;
-        }
-
-
-        await navigator.clipboard.writeText(
-            output.value
+    const output =
+        document.getElementById(
+            "accessoryOutput"
         );
 
 
-        status.textContent =
-            "Copied!";
+    if (!output.value) {
+
+        alert(
+            "Generate a code first."
+        );
+
+        return;
     }
-);
+
+
+    await navigator.clipboard.writeText(
+        output.value
+    );
+
+
+    document.getElementById(
+        "accessoryStatus"
+    ).textContent =
+        "Copied!";
+};
 
 
 /* =====================================================
-   ACCESSORY CONVERTER
+   CLOTHING CONVERTER
 ===================================================== */
 
-const accessoryInput =
-    document.getElementById(
-        "accessoryInput"
-    );
-
-const accessoryGenerateButton =
-    document.getElementById(
-        "accessoryGenerateButton"
-    );
-
-const accessoryOutput =
-    document.getElementById(
-        "accessoryOutput"
-    );
-
-const accessoryCopyButton =
-    document.getElementById(
-        "accessoryCopyButton"
-    );
-
-const accessoryStatus =
-    document.getElementById(
-        "accessoryStatus"
-    );
-
-
-/*
-    Convert Accessories JSON → JJS.
-*/
-accessoryGenerateButton.addEventListener(
-    "click",
-    async () => {
-
-        const text =
-            accessoryInput.value.trim();
-
-
-        if (!text) {
-
-            alert(
-                "Paste your Accessories JSON first."
-            );
-
-            return;
-        }
-
-
-        try {
-
-            accessoryStatus.textContent =
-                "Reading accessories...";
-
-
-            /*
-                Parse the supplied JSON.
-            */
-            const data =
-                JSON.parse(text);
-
-
-            /*
-                Make sure Accessories exists.
-            */
-            if (
-                !Array.isArray(
-                    data.Accessories
-                )
-            ) {
-
-                throw new Error(
-                    'The JSON must contain an "Accessories" array.'
-                );
-            }
-
-
-            const lines = [];
-
-
-            /*
-                Process every accessory.
-            */
-            for (
-                let i = 0;
-                i < data.Accessories.length;
-                i++
-            ) {
-
-                const accessory =
-                    data.Accessories[i];
-
-
-                if (
-                    !accessory ||
-                    typeof accessory !== "object"
-                ) {
-                    continue;
-                }
-
-
-                /*
-                    TextureId → TEXTURE
-                */
-                const textureId =
-                    extractRobloxId(
-                        accessory.TextureId
-                    );
-
-
-                /*
-                    MeshId → AMOUNT
-                */
-                const meshId =
-                    extractRobloxId(
-                        accessory.MeshId
-                    );
-
-
-                /*
-                    Require both.
-                */
-                if (
-                    !textureId ||
-                    !meshId
-                ) {
-
-                    console.warn(
-                        "Skipping accessory because it is missing a valid TextureId or MeshId:",
-                        accessory
-                    );
-
-                    continue;
-                }
-
-
-                lines.push({
-
-                    TEXTURE:
-                        Number(textureId),
-
-                    AMOUNT:
-                        Number(meshId),
-
-                    K_NAME:
-                        "VISUAL",
-
-                    EFFECT:
-                        "Mesh"
-
-                });
-            }
-
-
-            /*
-                No valid accessories.
-            */
-            if (
-                lines.length === 0
-            ) {
-
-                throw new Error(
-                    "No valid accessories containing both TextureId and MeshId were found."
-                );
-            }
-
-
-            accessoryStatus.textContent =
-                `Found ${lines.length} accessory${
-                    lines.length === 1
-                        ? ""
-                        : "ies"
-                }. Compressing...`;
-
-
-            /*
-                Create one JJS code containing
-                every accessory.
-            */
-            const jjsData =
-                createJJS(lines);
-
-
-            const json =
-                JSON.stringify(jjsData);
-
-
-            /*
-                JSON → Zstandard → Base64
-            */
-            const base64 =
-                await jsonToJJS(json);
-
-
-            /*
-                Only display the final code.
-            */
-            accessoryOutput.value =
-                base64;
-
-
-            accessoryStatus.className =
-                "status success";
-
-
-            accessoryStatus.textContent =
-                `Done! ${lines.length} accessory${
-                    lines.length === 1
-                        ? ""
-                        : "ies"
-                } converted into one JJS code.`;
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            accessoryOutput.value =
-                "";
-
-            accessoryStatus.className =
-                "status error";
-
-            accessoryStatus.textContent =
-                "Conversion failed.";
-
-            alert(
-                "Accessory conversion failed:\n\n" +
-                error.message
-            );
-        }
-
-    }
-);
-
-
-/*
-    Copy accessory code.
-*/
-accessoryCopyButton.addEventListener(
-    "click",
-    async () => {
-
-        if (
-            !accessoryOutput.value
-        ) {
-
-            alert(
-                "Convert the accessories first."
-            );
-
-            return;
-        }
-
-
-        await navigator.clipboard.writeText(
-            accessoryOutput.value
+document.getElementById(
+    "generateClothingButton"
+).onclick = async () => {
+
+    const input =
+        document.getElementById(
+            "clothingInput"
+        ).value.trim();
+
+    const status =
+        document.getElementById(
+            "clothingStatus"
+        );
+
+    const output =
+        document.getElementById(
+            "clothingOutput"
         );
 
 
-        accessoryStatus.className =
+    if (!input) {
+
+        status.className =
+            "status error";
+
+        status.textContent =
+            "Paste your Clothing JSON first.";
+
+        return;
+    }
+
+
+    try {
+
+        status.className =
+            "status";
+
+        status.textContent =
+            "Reading clothing JSON...";
+
+
+        const data =
+            JSON.parse(input);
+
+
+        if (!data.Clothing) {
+
+            throw new Error(
+                'Missing "Clothing" property.'
+            );
+
+        }
+
+
+        /*
+            Supports:
+
+            {
+                "Clothing": {
+                    "Shirt": {...},
+                    "Pants": {...}
+                }
+            }
+
+            and:
+
+            {
+                "Clothing": [
+                    {
+                        "Type": "Shirt",
+                        "TextureId": "..."
+                    }
+                ]
+            }
+        */
+
+        let clothing =
+            data.Clothing;
+
+
+        if (Array.isArray(clothing)) {
+
+            const converted = {};
+
+
+            for (
+                const item
+                of clothing
+            ) {
+
+                if (!item || !item.Type) {
+                    continue;
+                }
+
+
+                if (
+                    item.Type.toLowerCase()
+                    === "shirt"
+                ) {
+
+                    converted.Shirt = {
+
+                        TextureId:
+                            item.TextureId,
+
+                        Torso:
+                            item.Torso,
+
+                        RightArm:
+                            item.RightArm,
+
+                        LeftArm:
+                            item.LeftArm
+
+                    };
+
+                }
+
+
+                if (
+                    item.Type.toLowerCase()
+                    === "pants"
+                ) {
+
+                    converted.Pants = {
+
+                        TextureId:
+                            item.TextureId,
+
+                        RightLeg:
+                            item.RightLeg,
+
+                        LeftLeg:
+                            item.LeftLeg
+
+                    };
+
+                }
+
+            }
+
+
+            clothing =
+                converted;
+        }
+
+
+        const shirt =
+            clothing.Shirt || null;
+
+        const pants =
+            clothing.Pants || null;
+
+
+        const lines = [];
+
+
+        /* =================================================
+           SHIRT
+        ================================================= */
+
+        if (shirt) {
+
+            const texture =
+                extractRobloxId(
+                    shirt.TextureId
+                );
+
+
+            const torso =
+                extractRobloxId(
+                    shirt.Torso
+                );
+
+
+            const rightArm =
+                extractRobloxId(
+                    shirt.RightArm
+                );
+
+
+            const leftArm =
+                extractRobloxId(
+                    shirt.LeftArm
+                );
+
+
+            if (
+                texture &&
+                (
+                    torso ||
+                    rightArm ||
+                    leftArm
+                )
+            ) {
+
+                lines.push({
+
+                    K_NAME:
+                        "BRANCH",
+
+                    BRANCH:
+                        "Shirt"
+
+                });
+
+
+                if (torso) {
+
+                    lines.push({
+
+                        "VISUAL TAG":
+                            "",
+
+                        TEXTURE:
+                            Number(texture),
+
+                        K_NAME:
+                            "VISUAL",
+
+                        EFFECT:
+                            "Mesh",
+
+                        ROTATION:
+                            "0, 180, 0",
+
+                        "ALT COLOR":
+                            "255, 219, 172",
+
+                        COLOR:
+                            "255, 219, 172",
+
+                        "BODY PART":
+                            "Torso",
+
+                        AMOUNT:
+                            Number(torso)
+
+                    });
+
+                }
+
+
+                if (rightArm) {
+
+                    lines.push({
+
+                        POSITION:
+                            "0, -0.1, 0",
+
+                        "VISUAL TAG":
+                            "",
+
+                        TEXTURE:
+                            Number(texture),
+
+                        K_NAME:
+                            "VISUAL",
+
+                        EFFECT:
+                            "Mesh",
+
+                        ROTATION:
+                            "0, 180, 0",
+
+                        "ALT COLOR":
+                            "255, 219, 172",
+
+                        COLOR:
+                            "255, 219, 172",
+
+                        "BODY PART":
+                            "Right Arm",
+
+                        AMOUNT:
+                            Number(rightArm)
+
+                    });
+
+                }
+
+
+                if (leftArm) {
+
+                    lines.push({
+
+                        POSITION:
+                            "0, -0.1, 0",
+
+                        "VISUAL TAG":
+                            "",
+
+                        TIME:
+                            0.4,
+
+                        TEXTURE:
+                            Number(texture),
+
+                        K_NAME:
+                            "VISUAL",
+
+                        EFFECT:
+                            "Mesh",
+
+                        ROTATION:
+                            "0, 180, 0",
+
+                        "ALT COLOR":
+                            "255, 219, 172",
+
+                        COLOR:
+                            "255, 219, 172",
+
+                        "BODY PART":
+                            "Left Arm",
+
+                        AMOUNT:
+                            Number(leftArm)
+
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        /* =================================================
+           PANTS
+        ================================================= */
+
+        if (pants) {
+
+            const texture =
+                extractRobloxId(
+                    pants.TextureId
+                );
+
+
+            const rightLeg =
+                extractRobloxId(
+                    pants.RightLeg
+                );
+
+
+            const leftLeg =
+                extractRobloxId(
+                    pants.LeftLeg
+                );
+
+
+            if (
+                texture &&
+                (
+                    rightLeg ||
+                    leftLeg
+                )
+            ) {
+
+                lines.push({
+
+                    K_NAME:
+                        "BRANCH",
+
+                    BRANCH:
+                        "Pants"
+
+                });
+
+
+                if (rightLeg) {
+
+                    lines.push({
+
+                        POSITION:
+                            "0, -0.1, 0",
+
+                        "VISUAL TAG":
+                            "",
+
+                        TIME:
+                            0.4,
+
+                        TEXTURE:
+                            Number(texture),
+
+                        EFFECT:
+                            "Mesh",
+
+                        K_NAME:
+                            "VISUAL",
+
+                        "ALT COLOR":
+                            "255, 219, 172",
+
+                        COLOR:
+                            "255, 219, 172",
+
+                        "BODY PART":
+                            "Right Leg",
+
+                        AMOUNT:
+                            Number(rightLeg)
+
+                    });
+
+                }
+
+
+                if (leftLeg) {
+
+                    lines.push({
+
+                        POSITION:
+                            "0, -0.1, 0",
+
+                        "VISUAL TAG":
+                            "",
+
+                        TIME:
+                            0.4,
+
+                        TEXTURE:
+                            Number(texture),
+
+                        EFFECT:
+                            "Mesh",
+
+                        K_NAME:
+                            "VISUAL",
+
+                        "ALT COLOR":
+                            "255, 219, 172",
+
+                        COLOR:
+                            "255, 219, 172",
+
+                        "BODY PART":
+                            "Left Leg",
+
+                        AMOUNT:
+                            Number(leftLeg)
+
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        if (!lines.length) {
+
+            throw new Error(
+                "No valid clothing meshes were found."
+            );
+
+        }
+
+
+        status.textContent =
+            "Creating JJS data...";
+
+
+        const innerData = {
+
+            Branch: [],
+
+            Line:
+                lines,
+
+            Prop: [],
+
+            Req: []
+
+        };
+
+
+        const jjs = [
+
+            {
+
+                ADD:
+                    false,
+
+                NAME:
+                    "Imported Meshes and Textures",
+
+                K_NAME:
+                    "SKILL",
+
+                KEY:
+                    1,
+
+                DATA:
+                    JSON.stringify(
+                        innerData
+                    ),
+
+                COOLDOWN:
+                    0
+
+            }
+
+        ];
+
+
+        status.textContent =
+            "Compressing with Zstandard...";
+
+
+        const code =
+            await jsonToBase64(
+                JSON.stringify(jjs)
+            );
+
+
+        output.value =
+            code;
+
+
+        status.className =
             "status success";
 
-        accessoryStatus.textContent =
-            "Accessory JJS code copied!";
+        status.textContent =
+            "Clothing converted successfully!";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        output.value =
+            "";
+
+        status.className =
+            "status error";
+
+        status.textContent =
+            "Conversion failed.";
+
+        alert(
+            "Clothing conversion failed:\n\n" +
+            error.message
+        );
+
     }
-);
+
+};
+
+
+/* Clothing copy */
+document.getElementById(
+    "copyClothingButton"
+).onclick = async () => {
+
+    const output =
+        document.getElementById(
+            "clothingOutput"
+        );
+
+
+    const status =
+        document.getElementById(
+            "clothingStatus"
+        );
+
+
+    if (!output.value) {
+
+        alert(
+            "Generate a clothing code first."
+        );
+
+        return;
+    }
+
+
+    await navigator.clipboard.writeText(
+        output.value
+    );
+
+
+    status.className =
+        "status success";
+
+    status.textContent =
+        "Clothing code copied!";
+
+};
 
 
 /* =====================================================
    K L U V DECODER
 ===================================================== */
 
-const decodeInput =
-    document.getElementById(
-        "decodeInput"
-    );
+document.getElementById(
+    "decodeButton"
+).onclick = async () => {
 
-const decodeButton =
-    document.getElementById(
-        "decodeButton"
-    );
-
-const decodeOutput =
-    document.getElementById(
-        "decodeOutput"
-    );
-
-const decodeStatus =
-    document.getElementById(
-        "decodeStatus"
-    );
-
-const copyDecodedButton =
-    document.getElementById(
-        "copyDecodedButton"
-    );
+    const input =
+        document.getElementById(
+            "decodeInput"
+        ).value.trim();
 
 
-/*
-    Decode Base64 → Zstandard → JSON.
-*/
-decodeButton.addEventListener(
-    "click",
-    async () => {
+    if (!input) {
 
-        const input =
-            decodeInput.value.trim();
+        alert(
+            "Paste a KLUv/Base64 code first."
+        );
+
+        return;
+    }
 
 
-        if (!input) {
+    try {
 
-            alert(
-                "Paste a KLUv/Base64 code first."
+        document.getElementById(
+            "decodeStatus"
+        ).textContent =
+            "Decoding...";
+
+
+        const compressed =
+            base64ToBytes(input);
+
+
+        const decompressed =
+            await decompress(
+                compressed
             );
 
-            return;
-        }
+
+        const decoder =
+            new TextDecoder();
 
 
-        try {
-
-            decodeStatus.textContent =
-                "Decoding Base64...";
-
-
-            /*
-                Base64 → bytes
-            */
-            const compressed =
-                base64ToBytes(input);
-
-
-            decodeStatus.textContent =
-                "Decompressing Zstandard...";
-
-
-            /*
-                Zstandard → original bytes
-            */
-            const decompressed =
-                await decompress(
-                    compressed
-                );
-
-
-            /*
-                Bytes → UTF-8.
-            */
-            const decoder =
-                new TextDecoder();
-
-
-            const jsonText =
-                decoder.decode(
-                    decompressed
-                );
-
-
-            /*
-                Parse JSON.
-            */
-            const parsed =
-                JSON.parse(jsonText);
-
-
-            /*
-                Pretty JSON.
-            */
-            decodeOutput.value =
-                JSON.stringify(
-                    parsed,
-                    null,
-                    2
-                );
-
-
-            decodeStatus.className =
-                "status success";
-
-            decodeStatus.textContent =
-                "Decoded successfully!";
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            decodeOutput.value =
-                "";
-
-            decodeStatus.className =
-                "status error";
-
-            decodeStatus.textContent =
-                "Could not decode code.";
-
-            alert(
-                "Decode failed.\n\n" +
-                error.message
+        const jsonText =
+            decoder.decode(
+                decompressed
             );
-        }
+
+
+        const parsed =
+            JSON.parse(
+                jsonText
+            );
+
+
+        document.getElementById(
+            "decodeOutput"
+        ).value =
+            JSON.stringify(
+                parsed,
+                null,
+                2
+            );
+
+
+        document.getElementById(
+            "decodeStatus"
+        ).className =
+            "status success";
+
+
+        document.getElementById(
+            "decodeStatus"
+        ).textContent =
+            "Decoded successfully!";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "decodeOutput"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "decodeStatus"
+        ).className =
+            "status error";
+
+
+        document.getElementById(
+            "decodeStatus"
+        ).textContent =
+            "Decode failed.";
+
+
+        alert(
+            "Could not decode this code.\n\n" +
+            error.message
+        );
 
     }
-);
+
+};
 
 
-/*
-    Copy decoded JSON.
-*/
-copyDecodedButton.addEventListener(
-    "click",
-    async () => {
+/* Decoder copy */
+document.getElementById(
+    "copyDecodedButton"
+).onclick = async () => {
 
-        if (
-            !decodeOutput.value
-        ) {
-
-            alert(
-                "Decode a code first."
-            );
-
-            return;
-        }
-
-
-        await navigator.clipboard.writeText(
-            decodeOutput.value
+    const output =
+        document.getElementById(
+            "decodeOutput"
         );
 
 
-        decodeStatus.className =
-            "status success";
+    if (!output.value) {
 
-        decodeStatus.textContent =
-            "JSON copied!";
+        alert(
+            "Decode a code first."
+        );
+
+        return;
     }
-);
+
+
+    await navigator.clipboard.writeText(
+        output.value
+    );
+
+
+    document.getElementById(
+        "decodeStatus"
+    ).textContent =
+        "JSON copied!";
+
+};
 
 </script>
 
