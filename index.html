@@ -4,616 +4,303 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>JJSMeshConverter</title>
+<title>JJS Mesh Converter</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    min-height: 100vh;
-    background: #090909;
-    color: #fff;
+    background: #0e0e0e;
+    color: white;
     font-family: Arial, sans-serif;
 }
 
-header {
-    padding: 25px;
-    text-align: center;
-    border-bottom: 1px solid #222;
-}
-
-header h1 {
-    margin: 0;
-    font-size: 30px;
-}
-
-header p {
-    color: #888;
-    margin-bottom: 0;
-}
-
 .container {
-    width: min(1200px, 94%);
-    margin: 25px auto;
+    width: min(850px, 94%);
+    margin: 40px auto;
 }
 
-.card {
-    background: #111;
-    border: 1px solid #242424;
-    border-radius: 12px;
-    padding: 20px;
+.section {
+    background: #1a1a1a;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 16px;
+    box-shadow: 0 5px 25px rgba(0,0,0,.25);
+}
+
+h1 {
+    text-align: center;
+    margin-top: 0;
+}
+
+h2 {
+    margin-top: 0;
+    text-align: center;
+}
+
+.description {
+    color: #999;
+    text-align: center;
     margin-bottom: 20px;
 }
 
-textarea {
-    width: 100%;
-    min-height: 350px;
-    resize: vertical;
-    background: #080808;
-    color: #ddd;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 15px;
-    font-family: Consolas, monospace;
-    font-size: 13px;
-    outline: none;
+.mesh {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
 }
 
-textarea:focus {
-    border-color: #666;
+.headers {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    color: #999;
+    font-size: 13px;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #292929;
+    color: white;
+    outline: none;
+    font-family: monospace;
+}
+
+textarea {
+    min-height: 180px;
+    resize: vertical;
+    margin-top: 15px;
 }
 
 button {
-    border: 0;
+    width: 100%;
+    margin-top: 15px;
+    padding: 13px;
+    border: none;
     border-radius: 8px;
-    padding: 12px 18px;
-    margin: 8px 5px 0 0;
-    background: #fff;
-    color: #000;
-    font-weight: bold;
+    background: #5865f2;
+    color: white;
+    font-size: 16px;
     cursor: pointer;
 }
 
 button:hover {
-    opacity: .85;
+    background: #4752c4;
 }
 
-button.secondary {
-    background: #222;
-    color: #fff;
+.remove {
+    width: 45px;
+    margin: 0;
+    background: #d33;
 }
 
-.status {
-    margin-top: 12px;
-    color: #888;
+.remove:hover {
+    background: #a22;
 }
 
 .output {
-    min-height: 250px;
+    color: #00ff88;
+    background: #080808;
 }
 
-.stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+.status {
     margin-top: 15px;
+    text-align: center;
+    color: #aaa;
 }
 
-.stat {
-    background: #0b0b0b;
-    border: 1px solid #222;
-    border-radius: 8px;
-    padding: 15px;
+.error {
+    color: #ff5555;
 }
 
-.stat b {
-    display: block;
-    font-size: 22px;
+.success {
+    color: #55ff88;
 }
 
-.stat span {
-    color: #777;
-    font-size: 12px;
-}
+@media (max-width: 600px) {
 
-@media(max-width:700px) {
-    .stats {
-        grid-template-columns: repeat(2, 1fr);
+    .mesh {
+        grid-template-columns: 1fr;
     }
+
+    .headers {
+        display: none;
+    }
+
+    .remove {
+        width: 100%;
+    }
+
 }
+
 </style>
 </head>
 
 <body>
 
-<header>
-    <h1>JJSMeshConverter</h1>
-    <p>Avatar JSON → JJS → Zstandard → Base64</p>
-</header>
-
 <div class="container">
 
-    <div class="card">
-        <h2>Avatar JSON</h2>
+    <h1>JJS Mesh Converter</h1>
 
-        <textarea
-            id="input"
-            placeholder="Paste the JSON exported by your Roblox avatar exporter here..."
-        ></textarea>
 
-        <br>
+    <!-- ================================================= -->
+    <!-- MULTI MESH ENCODER -->
+    <!-- ================================================= -->
 
-        <button onclick="convert()">
-            Convert
-        </button>
+    <div class="section">
 
-        <button class="secondary" onclick="loadFile()">
-            Load JSON File
-        </button>
+        <h2>Mesh IDs → JJS</h2>
 
-        <button class="secondary" onclick="clearAll()">
-            Clear
-        </button>
-
-        <input
-            id="fileInput"
-            type="file"
-            accept=".json,application/json"
-            hidden
-        >
-
-        <div class="status" id="status">
-            Waiting for JSON...
+        <div class="description">
+            Add multiple Texture IDs and Asset IDs and combine them
+            into one JJS Zstandard/Base64 code.
         </div>
-    </div>
 
+        <div class="headers">
+            <div>Texture ID</div>
+            <div>Asset ID</div>
+            <div></div>
+        </div>
 
-    <div class="card">
-        <h2>JJS Payload</h2>
+        <div id="meshes"></div>
+
+        <button id="addButton">
+            + Add Mesh
+        </button>
+
+        <button id="generateButton">
+            Generate Single JJS Code
+        </button>
 
         <textarea
-            id="jjsOutput"
+            id="output"
             class="output"
             readonly
-            placeholder="JJS JSON will appear here..."
+            placeholder="Zstandard Base64 output..."
         ></textarea>
 
-        <button onclick="copyJJS()">
-            Copy JJS JSON
+        <button id="copyButton">
+            Copy Code
         </button>
+
+        <div id="status" class="status">
+            Ready
+        </div>
+
     </div>
 
 
-    <div class="card">
-        <h2>Zstandard → Base64</h2>
+    <!-- ================================================= -->
+    <!-- ACCESSORY CONVERTER -->
+    <!-- ================================================= -->
+
+    <div class="section">
+
+        <h2>Accessory Code → JJS</h2>
+
+        <div class="description">
+            Paste your Roblox Accessories JSON and automatically
+            convert all MeshId and TextureId values into one JJS code.
+        </div>
 
         <textarea
-            id="base64Output"
-            class="output"
-            readonly
-            placeholder="Your final JJS Base64 code will appear here..."
+            id="accessoryInput"
+            placeholder='Paste Accessories JSON here...
+
+Example:
+{"Accessories":[{"TextureId":"rbxassetid://123","MeshId":"rbxassetid://456"}]}'
         ></textarea>
 
-        <button onclick="copyBase64()">
-            Copy Base64
+        <button id="accessoryGenerateButton">
+            Convert Accessories → JJS
         </button>
 
-        <button class="secondary" onclick="downloadBase64()">
-            Download
+        <textarea
+            id="accessoryOutput"
+            class="output"
+            readonly
+            placeholder="Zstandard Base64 JJS code..."
+        ></textarea>
+
+        <button id="accessoryCopyButton">
+            Copy Accessory JJS Code
         </button>
+
+        <div id="accessoryStatus" class="status">
+            Ready
+        </div>
+
     </div>
 
 
-    <div class="card">
-        <h2>Export Information</h2>
+    <!-- ================================================= -->
+    <!-- K L U V DECODER -->
+    <!-- ================================================= -->
 
-        <div class="stats">
-            <div class="stat">
-                <b id="meshCount">0</b>
-                <span>Meshes</span>
-            </div>
+    <div class="section">
 
-            <div class="stat">
-                <b id="textureCount">0</b>
-                <span>Textures</span>
-            </div>
+        <h2>KLUv Decoder</h2>
 
-            <div class="stat">
-                <b id="clothingCount">0</b>
-                <span>Clothing</span>
-            </div>
-
-            <div class="stat">
-                <b id="accessoryCount">0</b>
-                <span>Accessories</span>
-            </div>
+        <div class="description">
+            Paste a Zstandard/Base64 KLUv code to decode it back into JSON.
         </div>
+
+        <textarea
+            id="decodeInput"
+            placeholder="Paste KLUv / Base64 code here..."
+        ></textarea>
+
+        <button id="decodeButton">
+            Decode KLUv → JSON
+        </button>
+
+        <textarea
+            id="decodeOutput"
+            class="output"
+            readonly
+            placeholder="Decoded JSON..."
+        ></textarea>
+
+        <button id="copyDecodedButton">
+            Copy JSON
+        </button>
+
+        <div id="decodeStatus" class="status">
+            Ready
+        </div>
+
     </div>
 
 </div>
 
 
-<!--
-    zstd-codec provides real Zstandard compression in the browser.
--->
-<script src="https://cdn.jsdelivr.net/npm/zstd-codec@0.1.5/dist/zstd-codec.js"></script>
+<script type="module">
 
-<script>
+import {
+    compress,
+    decompress
+} from "https://esm.sh/@cloudpss/zstd@0.3.23";
 
-let lastBase64 = "";
 
+/* =====================================================
+   GENERAL FUNCTIONS
+===================================================== */
 
-/* ============================================================
-   File loading
-============================================================ */
 
-function loadFile() {
-
-    document.getElementById("fileInput").click();
-
-}
-
-document.getElementById("fileInput").addEventListener("change", function(e) {
-
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function() {
-
-        document.getElementById("input").value = reader.result;
-
-        setStatus("JSON loaded.");
-
-    };
-
-    reader.readAsText(file);
-
-});
-
-
-/* ============================================================
-   Utility
-============================================================ */
-
-function setStatus(text) {
-
-    document.getElementById("status").textContent = text;
-
-}
-
-
-function copyText(text) {
-
-    navigator.clipboard.writeText(text);
-
-}
-
-
-function copyJJS() {
-
-    const text = document.getElementById("jjsOutput").value;
-
-    if (!text) return;
-
-    copyText(text);
-
-    setStatus("JJS JSON copied.");
-
-}
-
-
-function copyBase64() {
-
-    if (!lastBase64) return;
-
-    copyText(lastBase64);
-
-    setStatus("Base64 copied.");
-
-}
-
-
-function clearAll() {
-
-    document.getElementById("input").value = "";
-    document.getElementById("jjsOutput").value = "";
-    document.getElementById("base64Output").value = "";
-
-    lastBase64 = "";
-
-    document.getElementById("meshCount").textContent = "0";
-    document.getElementById("textureCount").textContent = "0";
-    document.getElementById("clothingCount").textContent = "0";
-    document.getElementById("accessoryCount").textContent = "0";
-
-    setStatus("Cleared.");
-
-}
-
-
-/* ============================================================
-   Extract asset IDs
-============================================================ */
-
-function collectAssets(data) {
-
-    const meshes = [];
-    const textures = [];
-    const clothing = [];
-    const accessories = [];
-
-
-    function addMesh(mesh) {
-
-        if (!mesh) return;
-
-        const props = mesh.Properties || {};
-
-        if (props.MeshId) {
-
-            meshes.push({
-                name: mesh.Name || "",
-                className: mesh.ClassName || "",
-                meshId: props.MeshId
-            });
-
-        }
-
-        const texture =
-            props.TextureID ||
-            props.TextureId ||
-            props.Texture;
-
-        if (texture) {
-
-            textures.push({
-                name: mesh.Name || "",
-                textureId: texture
-            });
-
-        }
-
-    }
-
-
-    function scanObject(obj) {
-
-        if (!obj || typeof obj !== "object") return;
-
-
-        if (Array.isArray(obj)) {
-
-            for (const item of obj) {
-
-                scanObject(item);
-
-            }
-
-            return;
-
-        }
-
-
-        if (obj.Meshes) {
-
-            for (const mesh of obj.Meshes) {
-
-                addMesh(mesh);
-
-            }
-
-        }
-
-
-        if (obj.Clothing) {
-
-            for (const item of obj.Clothing) {
-
-                const props = item.Properties || {};
-
-                clothing.push({
-                    name: item.Name || "",
-                    className: item.ClassName || "",
-                    shirt: props.ShirtTemplate || null,
-                    pants: props.PantsTemplate || null,
-                    graphic: props.Graphic || null
-                });
-
-            }
-
-        }
-
-
-        if (obj.Accessories) {
-
-            for (const item of obj.Accessories) {
-
-                accessories.push({
-                    name: item.Name || "",
-                    className: item.ClassName || ""
-                });
-
-            }
-
-        }
-
-
-        if (obj.Parts) {
-
-            for (const part of obj.Parts) {
-
-                const props = part.Properties || {};
-
-                const meshId = props.MeshId;
-
-                const texture =
-                    props.TextureID ||
-                    props.TextureId ||
-                    props.Texture;
-
-                if (meshId) {
-
-                    meshes.push({
-                        name: part.Name || "",
-                        className: part.ClassName || "",
-                        meshId: meshId
-                    });
-
-                }
-
-                if (texture) {
-
-                    textures.push({
-                        name: part.Name || "",
-                        textureId: texture
-                    });
-
-                }
-
-            }
-
-        }
-
-    }
-
-
-    scanObject(data);
-
-
-    return {
-        meshes,
-        textures,
-        clothing,
-        accessories
-    };
-
-}
-
-
-/* ============================================================
-   Build JJS payload
-============================================================ */
-
-function buildJJSPayload(avatar) {
-
-    const assets = collectAssets(avatar);
-
-
-    /*
-        This is the normalized payload sent into the
-        Zstandard stage.
-
-        The complete original avatar data is retained under
-        "Avatar" so no information from the Roblox exporter
-        gets thrown away.
-    */
-
-    const jjs = {
-
-        Version: 1,
-
-        Type: "Avatar",
-
-        Meshes: assets.meshes,
-
-        Textures: assets.textures,
-
-        Clothing: assets.clothing,
-
-        Accessories: assets.accessories,
-
-        Avatar: avatar
-
-    };
-
-
-    return jjs;
-
-}
-
-
-/* ============================================================
-   Zstandard compression
-============================================================ */
-
-function compressZstd(text) {
-
-    return new Promise((resolve, reject) => {
-
-        try {
-
-            if (
-                typeof ZstdCodec === "undefined"
-            ) {
-
-                reject(
-                    new Error(
-                        "Zstandard library failed to load."
-                    )
-                );
-
-                return;
-
-            }
-
-
-            ZstdCodec.run(function(zstd) {
-
-                try {
-
-                    const simple = new zstd.Simple();
-
-                    const encoder = new TextEncoder();
-
-                    const inputBytes =
-                        encoder.encode(text);
-
-
-                    /*
-                        Compression level 10.
-                        Change this if your JJS format
-                        requires another level.
-                    */
-
-                    const compressed =
-                        simple.compress(
-                            inputBytes,
-                            10
-                        );
-
-
-                    resolve(compressed);
-
-                } catch(error) {
-
-                    reject(error);
-
-                }
-
-            });
-
-        } catch(error) {
-
-            reject(error);
-
-        }
-
-    });
-
-}
-
-
-/* ============================================================
-   Uint8Array → Base64
-============================================================ */
-
-function uint8ToBase64(bytes) {
+/*
+    Uint8Array → Base64
+*/
+function bytesToBase64(bytes) {
 
     let binary = "";
 
@@ -635,175 +322,865 @@ function uint8ToBase64(bytes) {
             );
 
         binary += String.fromCharCode(...chunk);
-
     }
 
     return btoa(binary);
-
 }
 
 
-/* ============================================================
-   Main conversion
-============================================================ */
+/*
+    Base64 → Uint8Array
+*/
+function base64ToBytes(base64) {
 
-async function convert() {
+    base64 =
+        base64.replace(/\s/g, "");
 
-    const input =
-        document.getElementById("input").value.trim();
+    const binary =
+        atob(base64);
 
+    const bytes =
+        new Uint8Array(binary.length);
 
-    if (!input) {
+    for (
+        let i = 0;
+        i < binary.length;
+        i++
+    ) {
 
-        setStatus("Paste your avatar JSON first.");
-
-        return;
-
+        bytes[i] =
+            binary.charCodeAt(i);
     }
 
-
-    let avatar;
-
-
-    try {
-
-        avatar = JSON.parse(input);
-
-    } catch(error) {
-
-        setStatus(
-            "Invalid JSON: " + error.message
-        );
-
-        return;
-
-    }
-
-
-    setStatus("Reading avatar data...");
-
-
-    try {
-
-        const assets =
-            collectAssets(avatar);
-
-
-        document.getElementById(
-            "meshCount"
-        ).textContent =
-            assets.meshes.length;
-
-
-        document.getElementById(
-            "textureCount"
-        ).textContent =
-            assets.textures.length;
-
-
-        document.getElementById(
-            "clothingCount"
-        ).textContent =
-            assets.clothing.length;
-
-
-        document.getElementById(
-            "accessoryCount"
-        ).textContent =
-            assets.accessories.length;
-
-
-        const jjs =
-            buildJJSPayload(avatar);
-
-
-        const jjsString =
-            JSON.stringify(jjs);
-
-
-        document.getElementById(
-            "jjsOutput"
-        ).value =
-            JSON.stringify(jjs, null, 2);
-
-
-        setStatus(
-            "Compressing with Zstandard..."
-        );
-
-
-        const compressed =
-            await compressZstd(jjsString);
-
-
-        const base64 =
-            uint8ToBase64(compressed);
-
-
-        lastBase64 = base64;
-
-
-        document.getElementById(
-            "base64Output"
-        ).value =
-            base64;
-
-
-        setStatus(
-            "Finished! JJS → Zstandard → Base64."
-        );
-
-
-    } catch(error) {
-
-        console.error(error);
-
-        setStatus(
-            "Conversion failed: " +
-            error.message
-        );
-
-    }
-
+    return bytes;
 }
 
 
-/* ============================================================
-   Download Base64
-============================================================ */
+/*
+    JSON → Zstandard → Base64
+*/
+async function jsonToJJS(json) {
 
-function downloadBase64() {
+    const encoder =
+        new TextEncoder();
 
-    if (!lastBase64) return;
+    const bytes =
+        encoder.encode(json);
+
+    const compressed =
+        await compress(bytes, 3);
+
+    return bytesToBase64(compressed);
+}
 
 
-    const blob =
-        new Blob(
-            [lastBase64],
-            { type: "text/plain" }
+/*
+    Extract a Roblox numeric asset ID.
+
+    Supports:
+
+    rbxassetid://123456
+
+    http://www.roblox.com/asset/?id=123456
+
+    https://www.roblox.com/asset/?id=123456
+
+    Also handles accidental spaces.
+*/
+function extractRobloxId(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return null;
+    }
+
+    const text =
+        String(value).trim();
+
+
+    /*
+        rbxassetid://123
+    */
+    const rbxMatch =
+        text.match(
+            /rbxassetid:\/\/(\d+)/i
+        );
+
+    if (rbxMatch) {
+        return rbxMatch[1];
+    }
+
+
+    /*
+        roblox.com/asset/?id=123
+    */
+    const urlMatch =
+        text.match(
+            /[?&]id=(\d+)/i
+        );
+
+    if (urlMatch) {
+        return urlMatch[1];
+    }
+
+
+    /*
+        If the user only supplied a number.
+    */
+    const numberMatch =
+        text.match(
+            /^\d+$/
+        );
+
+    if (numberMatch) {
+        return numberMatch[0];
+    }
+
+
+    return null;
+}
+
+
+/*
+    Create JJS structure from mesh pairs.
+*/
+function createJJS(lines) {
+
+    const innerData = {
+
+        Line: lines,
+
+        Prop: [],
+
+        Req: []
+    };
+
+
+    return [
+
+        {
+            ADD: false,
+
+            NAME: "IMPORT",
+
+            K_NAME: "SKILL",
+
+            KEY: 1,
+
+            "TOOL TIP": "",
+
+            DATA:
+                JSON.stringify(innerData),
+
+            COOLDOWN: 0
+        }
+
+    ];
+}
+
+
+/* =====================================================
+   MULTI MESH ENCODER
+===================================================== */
+
+const meshes =
+    document.getElementById("meshes");
+
+const addButton =
+    document.getElementById("addButton");
+
+const generateButton =
+    document.getElementById("generateButton");
+
+const copyButton =
+    document.getElementById("copyButton");
+
+const output =
+    document.getElementById("output");
+
+const status =
+    document.getElementById("status");
+
+
+/*
+    Add mesh row.
+*/
+function addMesh(
+    texture = "",
+    asset = ""
+) {
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "mesh";
+
+
+    row.innerHTML = `
+
+        <input
+            class="texture"
+            type="number"
+            placeholder="Texture ID"
+            value="${texture}"
+        >
+
+        <input
+            class="asset"
+            type="number"
+            placeholder="Asset ID"
+            value="${asset}"
+        >
+
+        <button class="remove">
+            ×
+        </button>
+
+    `;
+
+
+    row.querySelector(".remove")
+        .addEventListener(
+            "click",
+            () => {
+
+                if (
+                    meshes.children.length > 1
+                ) {
+                    row.remove();
+                }
+
+            }
         );
 
 
-    const url =
-        URL.createObjectURL(blob);
-
-
-    const a =
-        document.createElement("a");
-
-
-    a.href = url;
-
-    a.download =
-        "jjs-avatar-base64.txt";
-
-
-    a.click();
-
-
-    URL.revokeObjectURL(url);
-
+    meshes.appendChild(row);
 }
+
+
+/*
+    Start with one row.
+*/
+addMesh();
+
+
+/*
+    Add another row.
+*/
+addButton.addEventListener(
+    "click",
+    () => {
+
+        addMesh();
+
+    }
+);
+
+
+/*
+    Generate mesh JJS.
+*/
+generateButton.addEventListener(
+    "click",
+    async () => {
+
+        const rows =
+            [
+                ...meshes.querySelectorAll(
+                    ".mesh"
+                )
+            ];
+
+
+        const lines = [];
+
+
+        for (const row of rows) {
+
+            const texture =
+                row.querySelector(
+                    ".texture"
+                ).value.trim();
+
+            const asset =
+                row.querySelector(
+                    ".asset"
+                ).value.trim();
+
+
+            /*
+                Ignore completely empty rows.
+            */
+            if (
+                !texture &&
+                !asset
+            ) {
+                continue;
+            }
+
+
+            /*
+                Require both IDs.
+            */
+            if (
+                !texture ||
+                !asset
+            ) {
+
+                alert(
+                    "Every mesh needs both IDs."
+                );
+
+                return;
+            }
+
+
+            lines.push({
+
+                TEXTURE:
+                    Number(texture),
+
+                AMOUNT:
+                    Number(asset),
+
+                K_NAME:
+                    "VISUAL",
+
+                EFFECT:
+                    "Mesh"
+
+            });
+        }
+
+
+        if (
+            lines.length === 0
+        ) {
+
+            alert(
+                "Add at least one mesh."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            status.textContent =
+                "Compressing...";
+
+
+            const jjsData =
+                createJJS(lines);
+
+
+            const json =
+                JSON.stringify(jjsData);
+
+
+            const base64 =
+                await jsonToJJS(json);
+
+
+            output.value =
+                base64;
+
+
+            status.textContent =
+                `Done! ${lines.length} mesh${
+                    lines.length === 1
+                        ? ""
+                        : "es"
+                } combined.`;
+
+        } catch (error) {
+
+            console.error(error);
+
+            status.textContent =
+                "Conversion failed.";
+
+            alert(
+                error.message
+            );
+        }
+
+    }
+);
+
+
+/*
+    Copy mesh code.
+*/
+copyButton.addEventListener(
+    "click",
+    async () => {
+
+        if (!output.value) {
+
+            alert(
+                "Generate a code first."
+            );
+
+            return;
+        }
+
+
+        await navigator.clipboard.writeText(
+            output.value
+        );
+
+
+        status.textContent =
+            "Copied!";
+    }
+);
+
+
+/* =====================================================
+   ACCESSORY CONVERTER
+===================================================== */
+
+const accessoryInput =
+    document.getElementById(
+        "accessoryInput"
+    );
+
+const accessoryGenerateButton =
+    document.getElementById(
+        "accessoryGenerateButton"
+    );
+
+const accessoryOutput =
+    document.getElementById(
+        "accessoryOutput"
+    );
+
+const accessoryCopyButton =
+    document.getElementById(
+        "accessoryCopyButton"
+    );
+
+const accessoryStatus =
+    document.getElementById(
+        "accessoryStatus"
+    );
+
+
+/*
+    Convert Accessories JSON → JJS.
+*/
+accessoryGenerateButton.addEventListener(
+    "click",
+    async () => {
+
+        const text =
+            accessoryInput.value.trim();
+
+
+        if (!text) {
+
+            alert(
+                "Paste your Accessories JSON first."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            accessoryStatus.textContent =
+                "Reading accessories...";
+
+
+            /*
+                Parse the supplied JSON.
+            */
+            const data =
+                JSON.parse(text);
+
+
+            /*
+                Make sure Accessories exists.
+            */
+            if (
+                !Array.isArray(
+                    data.Accessories
+                )
+            ) {
+
+                throw new Error(
+                    'The JSON must contain an "Accessories" array.'
+                );
+            }
+
+
+            const lines = [];
+
+
+            /*
+                Process every accessory.
+            */
+            for (
+                let i = 0;
+                i < data.Accessories.length;
+                i++
+            ) {
+
+                const accessory =
+                    data.Accessories[i];
+
+
+                if (
+                    !accessory ||
+                    typeof accessory !== "object"
+                ) {
+                    continue;
+                }
+
+
+                /*
+                    TextureId → TEXTURE
+                */
+                const textureId =
+                    extractRobloxId(
+                        accessory.TextureId
+                    );
+
+
+                /*
+                    MeshId → AMOUNT
+                */
+                const meshId =
+                    extractRobloxId(
+                        accessory.MeshId
+                    );
+
+
+                /*
+                    Require both.
+                */
+                if (
+                    !textureId ||
+                    !meshId
+                ) {
+
+                    console.warn(
+                        "Skipping accessory because it is missing a valid TextureId or MeshId:",
+                        accessory
+                    );
+
+                    continue;
+                }
+
+
+                lines.push({
+
+                    TEXTURE:
+                        Number(textureId),
+
+                    AMOUNT:
+                        Number(meshId),
+
+                    K_NAME:
+                        "VISUAL",
+
+                    EFFECT:
+                        "Mesh"
+
+                });
+            }
+
+
+            /*
+                No valid accessories.
+            */
+            if (
+                lines.length === 0
+            ) {
+
+                throw new Error(
+                    "No valid accessories containing both TextureId and MeshId were found."
+                );
+            }
+
+
+            accessoryStatus.textContent =
+                `Found ${lines.length} accessory${
+                    lines.length === 1
+                        ? ""
+                        : "ies"
+                }. Compressing...`;
+
+
+            /*
+                Create one JJS code containing
+                every accessory.
+            */
+            const jjsData =
+                createJJS(lines);
+
+
+            const json =
+                JSON.stringify(jjsData);
+
+
+            /*
+                JSON → Zstandard → Base64
+            */
+            const base64 =
+                await jsonToJJS(json);
+
+
+            /*
+                Only display the final code.
+            */
+            accessoryOutput.value =
+                base64;
+
+
+            accessoryStatus.className =
+                "status success";
+
+
+            accessoryStatus.textContent =
+                `Done! ${lines.length} accessory${
+                    lines.length === 1
+                        ? ""
+                        : "ies"
+                } converted into one JJS code.`;
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            accessoryOutput.value =
+                "";
+
+            accessoryStatus.className =
+                "status error";
+
+            accessoryStatus.textContent =
+                "Conversion failed.";
+
+            alert(
+                "Accessory conversion failed:\n\n" +
+                error.message
+            );
+        }
+
+    }
+);
+
+
+/*
+    Copy accessory code.
+*/
+accessoryCopyButton.addEventListener(
+    "click",
+    async () => {
+
+        if (
+            !accessoryOutput.value
+        ) {
+
+            alert(
+                "Convert the accessories first."
+            );
+
+            return;
+        }
+
+
+        await navigator.clipboard.writeText(
+            accessoryOutput.value
+        );
+
+
+        accessoryStatus.className =
+            "status success";
+
+        accessoryStatus.textContent =
+            "Accessory JJS code copied!";
+    }
+);
+
+
+/* =====================================================
+   K L U V DECODER
+===================================================== */
+
+const decodeInput =
+    document.getElementById(
+        "decodeInput"
+    );
+
+const decodeButton =
+    document.getElementById(
+        "decodeButton"
+    );
+
+const decodeOutput =
+    document.getElementById(
+        "decodeOutput"
+    );
+
+const decodeStatus =
+    document.getElementById(
+        "decodeStatus"
+    );
+
+const copyDecodedButton =
+    document.getElementById(
+        "copyDecodedButton"
+    );
+
+
+/*
+    Decode Base64 → Zstandard → JSON.
+*/
+decodeButton.addEventListener(
+    "click",
+    async () => {
+
+        const input =
+            decodeInput.value.trim();
+
+
+        if (!input) {
+
+            alert(
+                "Paste a KLUv/Base64 code first."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            decodeStatus.textContent =
+                "Decoding Base64...";
+
+
+            /*
+                Base64 → bytes
+            */
+            const compressed =
+                base64ToBytes(input);
+
+
+            decodeStatus.textContent =
+                "Decompressing Zstandard...";
+
+
+            /*
+                Zstandard → original bytes
+            */
+            const decompressed =
+                await decompress(
+                    compressed
+                );
+
+
+            /*
+                Bytes → UTF-8.
+            */
+            const decoder =
+                new TextDecoder();
+
+
+            const jsonText =
+                decoder.decode(
+                    decompressed
+                );
+
+
+            /*
+                Parse JSON.
+            */
+            const parsed =
+                JSON.parse(jsonText);
+
+
+            /*
+                Pretty JSON.
+            */
+            decodeOutput.value =
+                JSON.stringify(
+                    parsed,
+                    null,
+                    2
+                );
+
+
+            decodeStatus.className =
+                "status success";
+
+            decodeStatus.textContent =
+                "Decoded successfully!";
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            decodeOutput.value =
+                "";
+
+            decodeStatus.className =
+                "status error";
+
+            decodeStatus.textContent =
+                "Could not decode code.";
+
+            alert(
+                "Decode failed.\n\n" +
+                error.message
+            );
+        }
+
+    }
+);
+
+
+/*
+    Copy decoded JSON.
+*/
+copyDecodedButton.addEventListener(
+    "click",
+    async () => {
+
+        if (
+            !decodeOutput.value
+        ) {
+
+            alert(
+                "Decode a code first."
+            );
+
+            return;
+        }
+
+
+        await navigator.clipboard.writeText(
+            decodeOutput.value
+        );
+
+
+        decodeStatus.className =
+            "status success";
+
+        decodeStatus.textContent =
+            "JSON copied!";
+    }
+);
 
 </script>
 
